@@ -41,6 +41,16 @@ export default function Team() {
       href: 'https://www.linkedin.com/in/kierra-barr/'
     },
     {
+      // TODO: role is provisional until confirmed
+      id: 14,
+      img: `${baseUrl}img/officers/zane.jpg`,
+      name: 'Zane St. John',
+      major: 'BS in Symbolic Systems',
+      role: 'Logistics',
+      bio: '',
+      href: 'https://www.linkedin.com/in/zaney/'
+    },
+    {
       id: 5,
       img: `${baseUrl}img/officers/kristen.jpg`,
       name: 'Kristen Guernsey',
@@ -85,16 +95,15 @@ export default function Team() {
       bio: '',
       href: 'https://www.linkedin.com/in/carolineegeiger/'
     },
-    // TODO: uncomment once Sara sends her headshot, major, and LinkedIn
-    // {
-    //   id: 10,
-    //   img: `${baseUrl}img/officers/sara.jpg`,
-    //   name: 'Sara Kothari',
-    //   major: '',
-    //   role: 'Industry',
-    //   bio: '',
-    //   href: ''
-    // },
+    {
+      id: 10,
+      img: `${baseUrl}img/officers/sara.jpg`,
+      name: 'Sara Kothari',
+      major: 'BS in Electrical Engineering; MS in Computer Science',
+      role: 'Industry',
+      bio: '',
+      href: 'https://www.linkedin.com/in/sara-kothari/'
+    },
     {
       id: 11,
       img: `${baseUrl}img/officers/milly.png`,

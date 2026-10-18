@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { BRANCH_EMAIL, MAILING_LIST_URL } from '../data/homeData'
+import { BRANCH_EMAIL, MAILING_LIST_URL, SOCIAL_LINKS, LUNCH_AND_LEARN_MAILTO } from '../data/homeData'
 import { branchCalendarUrl } from '../data/chaptersPageData'
 
 export default function Footer() {
@@ -12,10 +12,12 @@ export default function Footer() {
             IEEE / Stanford
           </span>
           <span className="site-footer-tagline">Student Branch, est. 2001</span>
+          <a href={LUNCH_AND_LEARN_MAILTO} className="site-footer-aside">Faculty: host a Lunch &amp; Learn →</a>
         </div>
 
         <nav className="site-footer-col" aria-label="Footer">
           <span className="site-footer-heading">Explore</span>
+          <Link to="/new">New here?</Link>
           <Link to="/events">Events</Link>
           <Link to="/chapters">Chapters</Link>
           <Link to="/team">Team</Link>
@@ -27,7 +29,9 @@ export default function Footer() {
           <span className="site-footer-heading">Connect</span>
           <a href={MAILING_LIST_URL} target="_blank" rel="noreferrer">Mailing list</a>
           <a href={branchCalendarUrl} target="_blank" rel="noreferrer">Luma calendar</a>
-          <a href="https://www.linkedin.com/company/stanford-ieee/" target="_blank" rel="noreferrer">LinkedIn</a>
+          {SOCIAL_LINKS.map((s) => (
+            <a key={s.label} href={s.href} target="_blank" rel="noreferrer">{s.label}</a>
+          ))}
           <a href={`mailto:${BRANCH_EMAIL}`}>{BRANCH_EMAIL}</a>
         </div>
       </div>

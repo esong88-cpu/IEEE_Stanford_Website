@@ -70,6 +70,7 @@ export default function Home() {
   const railRefs = useRef([])
   const scaleRef = useRef(null)
   const cueRef = useRef(null)
+  const jumpRef = useRef(null)
 
   const luma = useLumaEvents()
   const events = useMemo(() => {
@@ -232,6 +233,12 @@ export default function Home() {
         scaleRef.current.textContent = formatLength(m)
       }
       if (cueRef.current) cueRef.current.style.opacity = (1 - smooth(0.05, 0.25, u)).toFixed(3)
+      // The jump button hides while the events are on screen
+      if (jumpRef.current) {
+        const show = 1 - textAlpha(1, u)
+        jumpRef.current.style.opacity = show.toFixed(3)
+        jumpRef.current.style.pointerEvents = show > 0.5 ? 'auto' : 'none'
+      }
     }
 
     function frame(now) {
@@ -315,6 +322,7 @@ export default function Home() {
                 </span>
                 <span aria-hidden="true">→</span>
               </Link>
+              <Link to="/new" className="jr-new">New here? Start here →</Link>
             </section>
 
             <section ref={setPanel(1)} className="jr-panel" aria-label="Upcoming events">
@@ -410,6 +418,10 @@ export default function Home() {
             <span className="jr-scalebar-line" style={{ width: SCALE_BAR_PX }} />
             <span ref={scaleRef} className="jr-scalebar-value">40 nm</span>
           </div>
+          <button ref={jumpRef} type="button" className="jr-jump" onClick={() => jumpTo(1)}>
+            <span className="jr-jump-dot" aria-hidden="true" />
+            Upcoming events
+          </button>
           <div ref={cueRef} className="jr-cue" aria-hidden="true">
             <span className="jr-cue-line" />
           </div>

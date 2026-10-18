@@ -25,10 +25,52 @@ if (eventPagesMatch) {
   }
 }
 
-const routes = ['/team', '/events', '/ai-compute', '/chapters', '/mtts', '/eds', '/pes', '/pels', '/resources', '/contact']
+const routes = ['/team', '/events', '/ai-compute', '/new', '/chapters', '/mtts', '/eds', '/pes', '/pels', '/resources', '/contact']
 
 // Read the built index.html
 const template = fs.readFileSync(path.resolve(__dirname, '../dist/index.html'), 'utf-8')
+
+// Link previews: each prerendered page gets its own title, description, URL and image,
+// so links shared in email, Slack or social media show a proper card.
+const SITE = 'https://web.stanford.edu/group/ieee'
+const PAGE_META = {
+  '/ai-compute': {
+    title: 'AI Compute Orchestration S2S · Nov 13 at Stanford',
+    description: 'A half-day symposium on how AI hardware is built, from silicon to systems. Talks and a panel with Samsung, Stanford, Micron, Amazon and Anthropic. Free, with breakfast and lunch.',
+    image: 'og/ai-compute.jpg',
+  },
+  '/events': { title: 'Events · Stanford IEEE', description: 'Upcoming talks, firesides and professor lunches, plus past highlights.' },
+  '/team': { title: 'Team · Stanford IEEE', description: 'The officers and faculty advisors of the Stanford IEEE Student Branch.' },
+  '/new': { title: 'New here? · Stanford IEEE', description: 'How to come to an event, join the mailing list, find a chapter and help run the branch.' },
+  '/chapters': { title: 'Chapters · Stanford IEEE', description: 'MTT-S, PES, EDS and PELS: the technical chapters of the Stanford IEEE Student Branch.' },
+  '/mtts': { title: 'MTT-S Chapter · Stanford IEEE', description: 'Microwave theory, RF and wireless at Stanford.' },
+  '/pes': { title: 'PES Chapter · Stanford IEEE', description: 'Power systems, energy conversion and grid modernization at Stanford.' },
+  '/eds': { title: 'EDS Chapter · Stanford IEEE', description: 'Semiconductor devices and fabrication at Stanford.' },
+  '/pels': { title: 'PELS Chapter · Stanford IEEE', description: 'Power converters, motor drives and wide-bandgap devices at Stanford.' },
+  '/resources': { title: 'Resources · Stanford IEEE', description: 'Resources from the Stanford IEEE Student Branch.' },
+  '/contact': { title: 'Contact · Stanford IEEE', description: 'Get in touch with the Stanford IEEE Student Branch.' },
+}
+
+const escapeAttr = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+
+function withMeta(html, route) {
+  const meta = PAGE_META[route]
+  if (!meta) return html
+  const url = `${SITE}${route}/`
+  const image = `${SITE}/${meta.image || 'og/home.jpg'}`
+  const set = (attr, key, value) =>
+    html.replace(new RegExp(`(<meta ${attr}="${key}" content=")[^"]*(")`), `$1${escapeAttr(value)}$2`)
+  html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeAttr(meta.title)}</title>`)
+  html = set('name', 'description', meta.description)
+  html = set('property', 'og:title', meta.title)
+  html = set('property', 'og:description', meta.description)
+  html = set('property', 'og:url', url)
+  html = set('property', 'og:image', image)
+  html = set('name', 'twitter:title', meta.title)
+  html = set('name', 'twitter:description', meta.description)
+  html = set('name', 'twitter:image', image)
+  return html.replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${url}$2`)
+}
 
 // Create static routes
 routes.forEach((route) => {
@@ -38,7 +80,7 @@ routes.forEach((route) => {
   
   // Copy index.html to route directory
   const filePath = path.join(dir, 'index.html')
-  fs.writeFileSync(filePath, template)
+  fs.writeFileSync(filePath, withMeta(template, route))
   console.log(`✓ Created ${route}/index.html`)
 })
 

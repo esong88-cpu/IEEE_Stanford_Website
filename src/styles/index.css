@@ -1217,6 +1217,16 @@ details[open] .year-body {
   color: var(--text-faint);
 }
 
+.site-footer-aside {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--text-faint);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease);
+}
+
+.site-footer-aside:hover { color: var(--text-muted); }
+
 .site-footer-col {
   display: flex;
   flex-direction: column;
@@ -2046,4 +2056,77 @@ details[open] .year-body {
 
 @media (prefers-reduced-motion: reduce) {
   .jr-pill-dot, .jr-cue-line { animation: none; }
+}
+
+/* ── New here ── */
+.new-steps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 720px) {
+  .new-steps { grid-template-columns: 1fr; }
+}
+
+.new-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.5rem 1.4rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.new-step-num {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  color: var(--red-bright);
+}
+
+.new-step-title { margin: 0; font-size: 1.125rem; font-weight: 600; }
+.new-step-body { margin: 0; font-size: 0.9375rem; line-height: 1.6; color: var(--text-muted); }
+.new-step-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: auto; padding-top: 0.5rem; }
+.new-note { margin: 0; max-width: 40rem; font-size: 0.9375rem; line-height: 1.65; color: var(--text-muted); }
+.new-socials { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+
+.jr-jump {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(238, 241, 247, 0.16);
+  background: rgba(12, 14, 20, 0.7);
+  backdrop-filter: blur(10px);
+  color: var(--jr-ink);
+  font-family: var(--jr-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+
+.jr-jump:hover { border-color: rgba(255, 92, 80, 0.6); }
+.jr-jump-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--jr-coral); }
+
+.jr-new {
+  font-family: var(--jr-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--jr-muted) !important;
+}
+
+.jr-new:hover { color: #fff !important; }
+
+@media (max-width: 819px) {
+  .jr-jump { right: 1.25rem; bottom: 3.25rem; }
 }

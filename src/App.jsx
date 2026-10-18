@@ -15,6 +15,7 @@ import PELS from './pages/PELS'
 import Contact from './pages/Contact'
 import Event from './pages/Event'
 import AICompute from './pages/AICompute'
+import NewHere from './pages/NewHere'
 
 export default function App() {
   const location = useLocation()
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/events" element={<Events />} />
           <Route path="/event/:id" element={<Event />} />
           <Route path="/ai-compute" element={<AICompute />} />
+          <Route path="/new" element={<NewHere />} />
           <Route path="/chapters" element={<Chapters />} />
           <Route path="/mtts" element={<MTTS />} />
           <Route path="/eds" element={<EDS />} />

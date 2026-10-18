@@ -36,7 +36,8 @@ export default function Events() {
         <Link to={aiComputeMeta.path} className="conf-callout">
           <span className="conf-callout-kicker">Symposium · {aiComputeMeta.dateStr}</span>
           <span className="conf-callout-title">
-            {aiComputeMeta.title}: {aiComputeMeta.subtitle}
+            AI Compute Orchestration <em>S2S</em>
+            <span className="conf-callout-sub">{aiComputeMeta.subtitle}</span>
           </span>
           <span className="conf-callout-desc">
             {aiComputeMeta.description} {aiComputeMeta.where}.

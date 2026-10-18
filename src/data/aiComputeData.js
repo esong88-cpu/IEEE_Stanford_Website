@@ -21,6 +21,14 @@ export const aiComputeMeta = {
   hostedBy: 'Stanford IEEE Student Branch',
   sponsoredBy: 'IEEE Circuits and Systems Society (CASS)',
   speakersFrom: 'Samsung, Stanford, Micron, Amazon & Anthropic',
+  seatsShort: 'About 70 seats',
+  footerUrl: 'ieee.stanford.edu/ai-compute',
+}
+
+export const aiComputeLogos = {
+  stanfordIeee: img('stanford-ieee.png'),
+  cass: img('ieee-cass.png'),
+  samsung: img('samsung.svg'),
 }
 
 export const aiComputeVenue = [
@@ -44,12 +52,12 @@ export const aiComputeProgram = [
   { time: '11:40', title: 'Multi-physical Challenges and Trends of 2.5D/3D Advanced Packaging for High-Current AI Processor Stacks', who: 'Vincent (WooPoung) Kim, Samsung' },
   { time: '12:00', title: 'Lunch', who: '', kind: 'quiet' },
   { time: '1:00', title: 'Orchestrating the stack', who: 'Tom Lee, Joonhoi Hur · moderated by Jawad Nasrullah', tag: 'Panel' },
-  { time: '1:55', title: 'Closing remarks', who: 'Nathan Chang and Elkim Roa Fuentes, Samsung Semiconductor', kind: 'quiet' },
+  { time: '1:55', title: 'Closing Remarks', who: 'Nathan Chang and Elkim Roa Fuentes, Samsung Semiconductor', kind: 'quiet' },
 ]
 
-// photo: '' shows initials (or "TBA" when tba is set).
+// photo: '' shows initials, or a mark with `mark` (default: org) when tba is set.
 export const aiComputeSpeakers = [
-  { name: 'To be announced', role: 'Keynote speaker', org: 'Announcing soon', photo: '', tba: true, tag: 'Keynote' },
+  { name: 'To be announced', role: 'Keynote speaker', org: 'Announcing soon', mark: 'Keynote', photo: '', tba: true, tag: 'Keynote' },
   {
     name: 'Thierry Tambe',
     role: 'Assistant Professor of Electrical Engineering',
@@ -79,6 +87,7 @@ export const aiComputeSpeakers = [
     role: 'Principal Applied Scientist, AWS AI Labs',
     org: 'Amazon',
     photo: '',
+    initials: 'YP',
     bio: 'Leads work on efficient foundation-model training and inference on AWS Trainium and Inferentia. PhD in Electrical Engineering, Stanford.',
   },
   { name: 'To be announced', role: 'Speaker', org: 'Anthropic', photo: '', tba: true },
@@ -105,6 +114,7 @@ export const aiComputeSpeakers = [
     role: 'Corporate Vice President',
     org: 'Samsung',
     photo: '',
+    initials: 'JH',
     tag: 'Panel',
     bio: 'Leads a Samsung circuits lab working on high-speed I/O. Previously designed RF systems and ICs at Apple, Qualcomm and Texas Instruments.',
   },

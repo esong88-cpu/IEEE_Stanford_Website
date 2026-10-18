@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ParticleCanvas from '../components/ParticleCanvas'
+import PackageArt from '../components/PackageArt'
 import Reveal from '../components/Reveal'
 import StatCounter from '../components/StatCounter'
 import { useLumaEvents } from '../data/lumaEvents'
 import { chapters, branchCalendarUrl } from '../data/chaptersPageData'
-import { aiComputeMeta } from '../data/aiComputeData'
+import { aiComputeMeta, aiComputeLogos } from '../data/aiComputeData'
 import { hostedCompaniesData, pressLinksData } from '../data/eventsPageData'
 import {
   homeTagline,
@@ -38,7 +39,7 @@ function isSymposium(ev) {
 
 function eventTag(ev) {
   if (ev.chapters?.length) return { label: ev.chapters[0].short, color: ev.chapters[0].accent }
-  if (isSymposium(ev)) return { label: 'Symposium', color: SYMPOSIUM_ACCENT }
+  if (isSymposium(ev)) return { label: 'Featured', color: SYMPOSIUM_ACCENT }
   return null
 }
 
@@ -73,11 +74,12 @@ function EventRow({ ev }) {
 }
 
 function NextTicker({ ev }) {
+  const label = isSymposium(ev) ? 'Featured' : 'Next'
   const content = (
     <>
       <span className="home-ticker-dot" aria-hidden="true" />
       <span className="home-ticker-when">
-        Next · {weekdayFmt.format(ev.date)} {monthDayFmt.format(ev.date)}
+        {label} · {weekdayFmt.format(ev.date)} {monthDayFmt.format(ev.date)}
       </span>
       <span className="home-ticker-title">{ev.title}</span>
       <span className="home-ticker-arrow" aria-hidden="true">→</span>
@@ -109,16 +111,19 @@ export default function Home() {
   const [filter, setFilter] = useState('all')
   const [showAll, setShowAll] = useState(false)
 
-  const upcoming = luma.status === 'ready' ? luma.upcoming : []
+  const symposiumDays = daysUntil(aiComputeMeta.startsAt)
+  const showSymposium = symposiumDays >= 0
+  // The symposium is pinned above everything else while it's upcoming.
+  const lumaUpcoming = luma.status === 'ready' ? luma.upcoming : []
+  const upcoming = showSymposium
+    ? [...lumaUpcoming.filter(isSymposium), ...lumaUpcoming.filter((ev) => !isSymposium(ev))]
+    : lumaUpcoming
   const next = upcoming[0]
   const matching = upcoming.filter((ev) => filter === 'all' || ev.chapters?.some((c) => c.id === filter))
   const visible = showAll ? matching : matching.slice(0, EVENT_PREVIEW_COUNT)
   const chapterCounts = Object.fromEntries(
     chapters.map((ch) => [ch.id, upcoming.filter((ev) => ev.chapters?.some((c) => c.id === ch.id)).length])
   )
-
-  const symposiumDays = daysUntil(aiComputeMeta.startsAt)
-  const showSymposium = symposiumDays >= 0
 
   return (
     <div className="home">
@@ -143,6 +148,49 @@ export default function Home() {
 
         {next && <NextTicker ev={next} />}
       </section>
+
+      {showSymposium && (
+        <section className="s2s home-feature" aria-labelledby="home-feature-title">
+          <div className="s2s-grain" aria-hidden="true" />
+          <div className="s2s-wrap s2s-hero-inner home-feature-inner">
+            <div className="s2s-hero-copy">
+              <div className="home-feature-meta">
+                <span className="s2s-kicker">
+                  <span className="s2s-iri s2s-kicker-mark" aria-hidden="true" />
+                  <span>Featured · Inaugural symposium</span>
+                </span>
+                <span className="home-countdown">{symposiumDays === 0 ? 'Today' : `T–${symposiumDays} days`}</span>
+              </div>
+              <div className="s2s-title-block">
+                <h2 id="home-feature-title" className="s2s-title">
+                  AI Compute Orchestration <em>S2S</em>
+                </h2>
+                <p className="s2s-subtitle">{aiComputeMeta.subtitle}</p>
+              </div>
+              <p className="s2s-lede">{aiComputeMeta.description}</p>
+              <dl className="s2s-facts">
+                <div><dt>Date</dt><dd>{aiComputeMeta.dateStr}</dd></div>
+                <div><dt>Time</dt><dd>{aiComputeMeta.timeStr}</dd></div>
+                <div><dt>Where</dt><dd>{aiComputeMeta.where}</dd></div>
+              </dl>
+              <div className="s2s-hero-cta">
+                <a className="s2s-cta s2s-cta--lg" href={aiComputeMeta.lumaUrl} target="_blank" rel="noreferrer">
+                  Register on Luma
+                </a>
+                <Link to={aiComputeMeta.path} className="home-feature-link">Program &amp; speakers →</Link>
+              </div>
+              <div className="home-feature-hosts">
+                <img src={aiComputeLogos.stanfordIeee} alt="Stanford IEEE" className="home-feature-ieee" />
+                <span className="s2s-x" aria-hidden="true">×</span>
+                <img src={aiComputeLogos.cass} alt="IEEE Circuits and Systems Society" className="home-feature-cass" />
+                <span className="s2s-x" aria-hidden="true">×</span>
+                <img src={aiComputeLogos.samsung} alt="Samsung" className="home-feature-samsung" />
+              </div>
+            </div>
+            <PackageArt />
+          </div>
+        </section>
+      )}
 
       <section className="home-roster" aria-label="Past speakers">
         <div className="home-container home-roster-inner">
@@ -212,42 +260,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {showSymposium && (
-        <section className="home-symposium">
-          <div className="home-grid-bg" aria-hidden="true" />
-          <div className="home-wafer-wrap" aria-hidden="true">
-            <div className="home-wafer" />
-          </div>
-          <div className="home-container home-symposium-inner">
-            <div className="home-symposium-meta">
-              <span className="home-mono-label home-mono-label--violet">
-                Featured symposium <span className="home-label-sep">/</span> Fri Nov 13{' '}
-                <span className="home-label-sep">/</span> Allen 101X
-              </span>
-              <span className="home-countdown">{symposiumDays === 0 ? 'Today' : `T–${symposiumDays} days`}</span>
-            </div>
-            <h2 className="home-symposium-title">
-              Silicon <span className="home-dim">to</span>
-              <br />Systems.
-            </h2>
-            <p className="home-lede home-lede--lg">
-              {aiComputeMeta.title.replace(' S2S', '')}: a half-day on how AI hardware is built, layer by
-              layer. Breakfast and lunch included.
-            </p>
-            <p className="home-symposium-orgs">
-              <span className="home-mono-label">Speakers from</span>
-              <span>Samsung · Stanford · Micron · Amazon · Anthropic</span>
-            </p>
-            <div className="home-btn-row home-btn-row--start">
-              <a href={aiComputeMeta.lumaUrl} target="_blank" rel="noreferrer" className="home-btn home-btn--primary">
-                Register, free ↗
-              </a>
-              <Link to={aiComputeMeta.path} className="home-btn home-btn--ghost">Program &amp; speakers</Link>
-            </div>
-          </div>
-        </section>
-      )}
 
       <section className="home-section">
         <div className="home-container">

@@ -4,8 +4,8 @@ export const MAILING_LIST_URL = 'https://forms.gle/bCdLGNa4bYvpxj3f7'
 
 // Links with an empty href are hidden until filled in.
 export const SOCIAL_LINKS = [
-  { label: 'YouTube', href: '' },
-  { label: 'Instagram', href: '' },
+  { label: 'YouTube', href: 'https://www.youtube.com/@StanfordIEEE' },
+  { label: 'Instagram', href: 'https://www.instagram.com/ieee_stanford/' },
   { label: 'LinkedIn', href: 'https://www.linkedin.com/company/stanford-ieee/' },
 ].filter((link) => link.href)
 

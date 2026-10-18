@@ -11,7 +11,7 @@ export default function Footer() {
             <img src={`${import.meta.env.BASE_URL}img/ieee.png`} alt="" />
             IEEE / Stanford
           </span>
-          <span className="site-footer-tagline">Student Branch since 2001.</span>
+          <span className="site-footer-tagline">Student Branch, est. 2001</span>
         </div>
 
         <nav className="site-footer-col" aria-label="Footer">

@@ -7,14 +7,13 @@ import StatCounter from '../components/StatCounter'
 import { useLumaEvents } from '../data/lumaEvents'
 import { chapters, branchCalendarUrl } from '../data/chaptersPageData'
 import { aiComputeMeta, aiComputeLogos } from '../data/aiComputeData'
-import { hostedCompaniesData, pressLinksData } from '../data/eventsPageData'
+import { pressLinksData } from '../data/eventsPageData'
 import {
   homeTagline,
   pastSpeakers,
   speakerSpotlight,
   homeStats,
   facultyAdvisors,
-  partnerOffers,
   BRANCH_EMAIL,
   MAILING_LIST_URL,
 } from '../data/homeData'
@@ -93,14 +92,6 @@ function NextTicker({ ev }) {
   )
 }
 
-function SectionLabel({ index, children }) {
-  return (
-    <span className="home-label">
-      {index} <span className="home-label-sep">/</span> {children}
-    </span>
-  )
-}
-
 function daysUntil(date) {
   return Math.ceil((date - new Date()) / 86400000)
 }
@@ -141,8 +132,8 @@ export default function Home() {
           </h1>
           <p className="home-hero-sub hero-rise" style={{ '--d': '0.28s' }}>{homeTagline}</p>
           <div className="home-btn-row hero-rise" style={{ '--d': '0.4s' }}>
-            <a href="#upcoming" className="home-btn home-btn--primary">Upcoming events</a>
-            <a href="#partner" className="home-btn home-btn--ghost">Speak or partner →</a>
+            <a href="#upcoming" className="home-btn home-btn--primary">See upcoming events</a>
+            <a href="#partner" className="home-btn home-btn--ghost">Partner with us</a>
           </div>
         </div>
 
@@ -157,7 +148,7 @@ export default function Home() {
               <div className="home-feature-meta">
                 <span className="s2s-kicker">
                   <span className="s2s-iri s2s-kicker-mark" aria-hidden="true" />
-                  <span>Featured · Inaugural symposium</span>
+                  <span>Inaugural symposium</span>
                 </span>
                 <span className="home-countdown">{symposiumDays === 0 ? 'Today' : `T–${symposiumDays} days`}</span>
               </div>
@@ -167,7 +158,10 @@ export default function Home() {
                 </h2>
                 <p className="s2s-subtitle">{aiComputeMeta.subtitle}</p>
               </div>
-              <p className="s2s-lede">{aiComputeMeta.description}</p>
+              <p className="s2s-lede">
+                Talks and a panel on how AI hardware gets built, from the silicon up to full systems. Breakfast and
+                lunch are provided.
+              </p>
               <dl className="s2s-facts">
                 <div><dt>Date</dt><dd>{aiComputeMeta.dateStr}</dd></div>
                 <div><dt>Time</dt><dd>{aiComputeMeta.timeStr}</dd></div>
@@ -194,7 +188,7 @@ export default function Home() {
 
       <section className="home-roster" aria-label="Past speakers">
         <div className="home-container home-roster-inner">
-          <span className="home-mono-label">Past speakers</span>
+          <span className="home-mono-label">Past speakers include</span>
           <ul className="home-roster-list">
             {pastSpeakers.map((s) => (
               <li key={s.name}>
@@ -209,9 +203,8 @@ export default function Home() {
         <div className="home-container">
           <div className="home-section-head">
             <div className="home-heading">
-              <SectionLabel index="01">Events</SectionLabel>
-              <h2 className="home-h2">Upcoming</h2>
-              <p className="home-lede">Free, open to all students, no membership needed. RSVP on Luma.</p>
+              <h2 className="home-h2">Upcoming events</h2>
+              <p className="home-lede">Free and open to all Stanford students.</p>
             </div>
             <div className="home-filters" role="group" aria-label="Filter events by chapter">
               {[{ id: 'all', short: 'All', accent: '#ffffff' }, ...chapters].map((ch) => (
@@ -238,36 +231,32 @@ export default function Home() {
             {luma.status === 'error' && (
               <p className="home-rows-note">
                 Couldn’t load events right now. See the{' '}
-                <a href={branchCalendarUrl} target="_blank" rel="noreferrer">Luma calendar</a>.
+                <a href={branchCalendarUrl} target="_blank" rel="noreferrer">Luma calendar</a> instead.
               </p>
             )}
             {luma.status === 'ready' && matching.length === 0 && (
-              <p className="home-rows-note">Nothing scheduled for this chapter yet.</p>
+              <p className="home-rows-note">Nothing on the calendar for this chapter yet</p>
             )}
             {visible.map((ev) => (
               <EventRow key={ev.id} ev={ev} />
             ))}
             {matching.length > EVENT_PREVIEW_COUNT && (
               <button type="button" className="home-more" onClick={() => setShowAll((v) => !v)}>
-                {showAll ? 'Show fewer ↑' : `Show all ${matching.length} events ↓`}
+                {showAll ? 'Show fewer' : `Show all ${matching.length}`}
               </button>
             )}
           </div>
 
           <div className="home-links">
-            <a href={branchCalendarUrl} target="_blank" rel="noreferrer" className="home-link">Subscribe on Luma ↗</a>
+            <a href={branchCalendarUrl} target="_blank" rel="noreferrer" className="home-link">Luma calendar ↗</a>
             <Link to="/events" className="home-link">Past events →</Link>
           </div>
         </div>
       </section>
 
-      <section className="home-section">
+      <section className="home-section home-section--rule">
         <div className="home-container">
-          <div className="home-heading">
-            <SectionLabel index="02">Chapters</SectionLabel>
-            <h2 className="home-h2">Find your field</h2>
-            <p className="home-lede">Smaller groups inside the branch, each tied to an IEEE technical society.</p>
-          </div>
+          <h2 className="home-h2 home-h2--spaced">Our four chapters</h2>
           <div className="home-tiles">
             {chapters.map((ch, i) => (
               <Reveal key={ch.id} delay={i * 60}>
@@ -281,7 +270,6 @@ export default function Home() {
                   <span className="home-tile-body">
                     <span className="home-tile-short">{ch.short}</span>
                     <span className="home-tile-name">{ch.summaryTitle.split('—')[1]?.trim()}</span>
-                    <span className="home-tile-go">Meet the chair →</span>
                   </span>
                 </Link>
               </Reveal>
@@ -293,10 +281,7 @@ export default function Home() {
       <section className="home-section home-section--rule">
         <div className="home-container">
           <div className="home-section-head">
-            <div className="home-heading">
-              <SectionLabel index="03">Speakers</SectionLabel>
-              <h2 className="home-h2">In the room</h2>
-            </div>
+            <h2 className="home-h2">Who’s spoken here</h2>
             <Link to="/events" className="home-link">Event archive →</Link>
           </div>
           <div className="home-spotlight">
@@ -312,35 +297,31 @@ export default function Home() {
               </Reveal>
             ))}
           </div>
-          <div className="home-proof">
-            <div className="home-proof-col">
-              <span className="home-mono-label">In the Stanford Daily</span>
-              {pressLinksData.map((item) => (
-                <a key={item.id} href={item.href} target="_blank" rel="noreferrer" className="home-press">
-                  “{item.title}” ↗
-                </a>
-              ))}
-            </div>
-            <div className="home-proof-col">
-              <span className="home-mono-label">Companies we’ve hosted</span>
-              <ul className="home-companies">
-                {hostedCompaniesData.map(({ name }) => (
-                  <li key={name}>{name}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          <p className="home-press-line">
+            <span className="home-mono-label">In the Stanford Daily</span>
+            {pressLinksData.map((item) => (
+              <a key={item.id} href={item.href} target="_blank" rel="noreferrer" className="home-press">
+                {item.title} ↗
+              </a>
+            ))}
+          </p>
         </div>
       </section>
 
       <section id="partner" className="home-section home-partner">
         <div className="home-container home-partner-inner">
           <div className="home-partner-pitch">
-            <SectionLabel index="04">Partner with us</SectionLabel>
-            <h2 className="home-h2">Bring your work to Stanford engineers.</h2>
+            <h2 className="home-h2">For speakers and sponsors</h2>
             <p className="home-lede home-lede--lg">
-              We host founders, executives and researchers, and take care of the room, the audience and the logistics.
+              We host founders, executives and researchers for talks, firesides and symposia, and we handle the room,
+              promotion and logistics.
             </p>
+            <div className="home-btn-row home-btn-row--start">
+              <a href={PARTNER_MAILTO} className="home-btn home-btn--primary">Email us</a>
+              <Link to="/team" className="home-btn home-btn--ghost">Meet the officers</Link>
+            </div>
+          </div>
+          <div className="home-partner-facts">
             <div className="home-stats">
               {homeStats.map((s) => (
                 <StatCounter key={s.label} value={s.value} suffix={s.suffix} label={s.label} />
@@ -350,25 +331,7 @@ export default function Home() {
               <span className="home-mono-label">Faculty advisors</span>
               <span>{facultyAdvisors.join(' · ')}</span>
             </p>
-            <div className="home-btn-row home-btn-row--start">
-              <a href={PARTNER_MAILTO} className="home-btn home-btn--primary">Email the team</a>
-              <Link to="/team" className="home-btn home-btn--ghost">Meet the officers</Link>
-            </div>
           </div>
-          <ol className="home-offers">
-            {partnerOffers.map((o, i) => (
-              <li key={o.title}>
-                <a href={PARTNER_MAILTO} className="home-offer">
-                  <span className="home-offer-num">0{i + 1}</span>
-                  <span className="home-offer-body">
-                    <span className="home-offer-title">{o.title}</span>
-                    <span className="home-offer-text">{o.body}</span>
-                  </span>
-                  <span className="home-offer-arrow" aria-hidden="true">→</span>
-                </a>
-              </li>
-            ))}
-          </ol>
         </div>
       </section>
 
@@ -376,26 +339,15 @@ export default function Home() {
         <div className="home-grid-bg" aria-hidden="true" />
         <div className="home-join-glow" aria-hidden="true" />
         <div className="home-container home-join-inner">
-          <div className="home-heading home-heading--center">
-            <SectionLabel index="05">Get involved</SectionLabel>
-            <h2 className="home-h2 home-h2--xl">Build with us.</h2>
-          </div>
-          <div className="home-steps">
-            <Link to="/events" className="home-step">
-              <span className="home-step-num">01</span>
-              <span className="home-step-title">Show up</span>
-              <span className="home-step-text">Every event is free. No membership needed.</span>
-            </Link>
-            <a href={MAILING_LIST_URL} target="_blank" rel="noreferrer" className="home-step">
-              <span className="home-step-num">02</span>
-              <span className="home-step-title">Join the mailing list</span>
-              <span className="home-step-text">Hear about new events first, plus the Luma calendar.</span>
+          <h2 className="home-h2">Get involved</h2>
+          <div className="home-btn-row">
+            <a href={MAILING_LIST_URL} target="_blank" rel="noreferrer" className="home-btn home-btn--primary">
+              Join the mailing list
             </a>
-            <Link to="/chapters" className="home-step">
-              <span className="home-step-num">03</span>
-              <span className="home-step-title">Join a chapter</span>
-              <span className="home-step-text">Pick MTT-S, PES, EDS or PELS and meet the chair.</span>
-            </Link>
+            <a href={branchCalendarUrl} target="_blank" rel="noreferrer" className="home-btn home-btn--ghost">
+              Follow on Luma ↗
+            </a>
+            <Link to="/chapters" className="home-btn home-btn--ghost">Find a chapter</Link>
           </div>
         </div>
       </section>

@@ -2,7 +2,7 @@
 const baseUrl = import.meta.env.BASE_URL
 
 export const homeTagline =
-  'Talks, firesides and professor lunches for Stanford engineers. Free and open to every student.'
+  'Talks and small-group lunches with engineers, founders and professors, open to any Stanford student.'
 
 export const pastSpeakers = [
   { name: 'Steve Wozniak', org: 'Apple' },
@@ -28,12 +28,6 @@ export const homeStats = [
 ]
 
 export const facultyAdvisors = ['Prof. Thomas Lee', 'Prof. Dustin Schroeder']
-
-export const partnerOffers = [
-  { title: 'Give a talk', body: 'A technical talk or demo for students across EE and CS.' },
-  { title: 'Host a fireside', body: 'A moderated conversation about your career, company and the problems you work on.' },
-  { title: 'Co-host a symposium', body: 'A half-day program, like AI Compute with Samsung and IEEE CASS.' },
-]
 
 export const BRANCH_EMAIL = 'ieee@ee.stanford.edu'
 export const MAILING_LIST_URL = 'https://forms.gle/bCdLGNa4bYvpxj3f7'

@@ -331,107 +331,161 @@ function drawTransistor(ctx, v) {
   ctx.restore()
 }
 
-/* ── 1 · Interconnect: copper lines over the transistor layer ────────────────── */
+/* ── 1 · Interconnect stack, seen from above ─────────────────────────────────── */
 
-const M1 = 0.034
-const M2 = 0.1
+// Metal layers from the bottom up: thin and dense near the transistors, wide and sparse on
+// top. `depth` drives parallax and how far each layer sinks into the dielectric.
+const METAL = [
+  { dir: 'h', pitch: 0.028, width: 0.009, depth: 1.0, seg: 0.25, tone: [104, 70, 48], alpha: 0.5 },
+  { dir: 'v', pitch: 0.042, width: 0.013, depth: 0.7, seg: 0.4, tone: [128, 86, 58], alpha: 0.48 },
+  { dir: 'h', pitch: 0.084, width: 0.024, depth: 0.4, seg: 0.7, tone: [148, 100, 68], alpha: 0.44 },
+  { dir: 'v', pitch: 0.21, width: 0.042, depth: 0.1, seg: 1.4, tone: [160, 112, 76], alpha: 0.34 },
+]
 
-function drawLogic(ctx, v) {
-  const { px, t0, child: c } = v
-  background(ctx, v, '#0a0d13')
+// Signal nets that climb the stack: M1 → M2 → M3 → M4, as [x, y] turning points.
+const NETS = Array.from({ length: 7 }, (_, n) => {
+  const sx = (hash(n, 11) * 2 - 1) * 1.4
+  const sy = (hash(n, 12) * 2 - 1) * 1.0
+  const x0 = Math.round(sx / 0.042) * 0.042
+  const y0 = Math.round(sy / 0.028) * 0.028
+  const x1 = x0 + (hash(n, 13) > 0.5 ? 1 : -1) * Math.round((0.12 + hash(n, 14) * 0.3) / 0.042) * 0.042
+  const y1 = Math.round((y0 + (hash(n, 15) > 0.5 ? 1 : -1) * (0.15 + hash(n, 16) * 0.3)) / 0.084) * 0.084
+  const x2 = Math.round((x1 + (hash(n, 17) > 0.5 ? 1 : -1) * (0.2 + hash(n, 18) * 0.4)) / 0.21) * 0.21
+  const y2 = y1 + (hash(n, 19) > 0.5 ? 1 : -1) * (0.3 + hash(n, 20) * 0.4)
+  return { pts: [[sx, y0], [x0, y0], [x0, y1], [x2, y1], [x2, y2]], speed: 0.1 + hash(n, 21) * 0.08, phase: hash(n, 22) }
+})
 
-  const inSlot = (x, y, pad = 0) => Math.abs(x) < c + pad && Math.abs(y) < c + pad
+function pathLength(pts) {
+  let total = 0
+  for (let i = 1; i < pts.length; i++) total += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])
+  return total
+}
 
-  // Device layer, seen dimly through the dielectric
-  const rowH = 2 * c + 0.02
-  const r0 = Math.floor(v.t / rowH) - 1
-  const r1 = Math.ceil(v.b / rowH) + 1
-  for (let r = r0; r <= r1; r++) {
-    const yc = r * rowH
-    for (let x = Math.floor(v.l / 0.05) * 0.05; x < v.r; x += 0.05) {
-      if (inSlot(x, yc, 0.03)) continue
-      ctx.fillStyle = 'rgba(70, 90, 120, 0.12)'
-      ctx.fillRect(x, yc - 0.06, 0.042, 0.12)
-      ctx.fillStyle = 'rgba(120, 60, 60, 0.12)'
-      ctx.fillRect(x + 0.018, yc - 0.09, 0.008, 0.18)
-    }
-  }
-
-  // M2: wider vertical copper, segmented
-  for (let m = Math.floor(v.l / M2) - 1; m <= Math.ceil(v.r / M2) + 1; m++) {
-    const x = m * M2
-    let y = Math.floor(v.t / 0.4) * 0.4 - 0.4
-    while (y < v.b) {
-      const len = 0.25 + hash(m, Math.round(y * 10)) * 0.9
-      const gap = 0.05 + hash(Math.round(y * 10), m) * 0.12
-      const y2 = y + len
-      const segs = Math.abs(x) < c + 0.03 ? [[y, Math.min(y2, -c - 0.03)], [Math.max(y, c + 0.03), y2]] : [[y, y2]]
-      for (const [a, b] of segs) {
-        if (b <= a) continue
-        const g = ctx.createLinearGradient(x - 0.008, 0, x + 0.008, 0)
-        g.addColorStop(0, 'rgba(150, 100, 66, 0.3)')
-        g.addColorStop(0.35, 'rgba(196, 144, 100, 0.38)')
-        g.addColorStop(1, 'rgba(90, 56, 36, 0.3)')
-        ctx.fillStyle = g
-        ctx.fillRect(x - 0.008, a, 0.016, b - a)
+function drawMetal(ctx, v, layer, ox, oy, keepOut) {
+  const { px } = v
+  const [r, g, b] = layer.tone
+  const horizontal = layer.dir === 'h'
+  const [lo, hi] = horizontal ? [v.t - oy, v.b - oy] : [v.l - ox, v.r - ox]
+  const [alo, ahi] = horizontal ? [v.l - ox, v.r - ox] : [v.t - oy, v.b - oy]
+  const w = layer.width
+  for (let k = Math.floor(lo / layer.pitch) - 1; k <= Math.ceil(hi / layer.pitch) + 1; k++) {
+    const c = k * layer.pitch
+    // Every fifth M1 track is a wide power rail
+    const rail = layer === METAL[0] && k % 5 === 0
+    const ww = rail ? w * 2.6 : w
+    let a = Math.floor(alo / layer.seg) * layer.seg - layer.seg
+    let s = 0
+    while (a < ahi) {
+      const len = layer.seg * (rail ? 3 : 0.3 + hash(k, s) * 1.1)
+      const gap = rail ? 0 : layer.seg * (0.06 + hash(s, k) * 0.25)
+      let a2 = a + len
+      // Keep the transistor slot clear
+      const cross = horizontal ? Math.abs(c + oy) < keepOut + ww : Math.abs(c + ox) < keepOut + ww
+      const segs = []
+      const center = horizontal ? -ox : -oy
+      if (cross && a < center + keepOut && a2 > center - keepOut) {
+        if (a < center - keepOut) segs.push([a, center - keepOut])
+        if (a2 > center + keepOut) segs.push([center + keepOut, a2])
+      } else segs.push([a, a2])
+      for (const [p, q] of segs) {
+        const [x, y, sw, sh] = horizontal ? [p + ox, c - ww / 2 + oy, q - p, ww] : [c - ww / 2 + ox, p + oy, ww, q - p]
+        // Shadow onto the layer below, body, then a lit top edge
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)'
+        ctx.fillRect(x + ww * 0.25, y + ww * 0.25, sw, sh)
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${rail ? layer.alpha + 0.12 : layer.alpha})`
+        ctx.fillRect(x, y, sw, sh)
+        ctx.fillStyle = `rgba(${r + 70}, ${g + 60}, ${b + 50}, 0.35)`
+        if (horizontal) ctx.fillRect(x, y, sw, Math.max(px, ww * 0.18))
+        else ctx.fillRect(x, y, Math.max(px, ww * 0.18), sh)
       }
-      y = y2 + gap
-    }
-  }
-
-  // M1: dense horizontal copper with vias down to the devices
-  for (let k = Math.floor(v.t / M1) - 1; k <= Math.ceil(v.b / M1) + 1; k++) {
-    const y = k * M1
-    let x = Math.floor(v.l / 0.3) * 0.3 - 0.3
-    while (x < v.r) {
-      const len = 0.08 + hash(k, Math.round(x * 20)) * 0.5
-      const gap = 0.02 + hash(Math.round(x * 20), k) * 0.06
-      const x2 = x + len
-      const segs = Math.abs(y) < c + 0.02 ? [[x, Math.min(x2, -c - 0.02)], [Math.max(x, c + 0.02), x2]] : [[x, x2]]
-      for (const [a, b] of segs) {
-        if (b <= a) continue
-        ctx.fillStyle = 'rgba(140, 92, 60, 0.36)'
-        ctx.fillRect(a, y - 0.006, b - a, 0.012)
-        ctx.fillStyle = 'rgba(240, 200, 160, 0.22)'
-        ctx.fillRect(a, y - 0.006, b - a, Math.min(0.003, px))
-        if (hash(k * 3, Math.round(a * 50)) > 0.55 && !inSlot(a + 0.01, y, 0.02)) {
-          ctx.fillStyle = 'rgba(230, 205, 170, 0.5)'
-          ctx.fillRect(a + 0.004, y - 0.005, 0.01, 0.01)
+      // Vias drop from this layer to the one beneath at segment ends
+      if (layer !== METAL[0] && hash(k * 7, s) > 0.4) {
+        const [vx, vy] = horizontal ? [a + ox + ww * 0.6, c + oy] : [c + ox, a + oy + ww * 0.6]
+        if (Math.abs(vx) > keepOut + ww || Math.abs(vy) > keepOut + ww) {
+          const vs = Math.min(ww * 0.6, 0.016)
+          ctx.fillStyle = `rgba(${r + 80}, ${g + 70}, ${b + 60}, 0.5)`
+          ctx.fillRect(vx - vs / 2, vy - vs / 2, vs, vs)
         }
       }
-      x = x2 + gap
+      a = a2 + gap
+      s++
+    }
+  }
+}
+
+function drawLogic(ctx, v) {
+  const { px, t0, child: c, mouse } = v
+  background(ctx, v, '#07090d')
+
+  // Parallax: deeper layers move less as the pointer or a slow drift moves the eye
+  const ex = (mouse ? mouse.x * 0.02 : 0) + Math.sin(t0 * 0.21) * 0.006
+  const ey = (mouse ? mouse.y * 0.02 : 0) + Math.cos(t0 * 0.17) * 0.006
+  const keepOut = c + 0.012
+
+  // Transistor rows at the very bottom, seen faintly through everything
+  const rowH = 0.2
+  for (let r = Math.floor(v.t / rowH) - 1; r <= Math.ceil(v.b / rowH) + 1; r++) {
+    for (let x = Math.floor(v.l / 0.042) * 0.042; x < v.r; x += 0.042) {
+      if (Math.abs(x) < keepOut && Math.abs(r * rowH) < keepOut + 0.1) continue
+      ctx.fillStyle = 'rgba(70, 92, 128, 0.16)'
+      ctx.fillRect(x - 0.012, r * rowH - 0.07, 0.024, 0.06)
+      ctx.fillStyle = 'rgba(128, 70, 72, 0.14)'
+      ctx.fillRect(x - 0.003, r * rowH - 0.09, 0.006, 0.18)
     }
   }
 
-  // Signals: short bright packets riding a few of the M1 tracks
-  for (let n = 0; n < 14; n++) {
-    const k = Math.round((hash(n, 1) * 2 - 1) * 30)
-    const y = k * M1
-    if (Math.abs(y) < c + 0.02 || y < v.t || y > v.b) continue
-    const span = v.r - v.l
-    const f = ((t0 * (0.08 + hash(n, 2) * 0.1) + hash(n, 3)) % 1)
-    const x = v.l + f * span
-    const g = ctx.createLinearGradient(x - 0.12, 0, x, 0)
-    g.addColorStop(0, rgba(CORAL, 0))
-    g.addColorStop(1, rgba(CORAL, 0.75))
-    ctx.fillStyle = g
-    ctx.fillRect(x - 0.12, y - 0.006, 0.12, 0.012)
-    glow(ctx, x, y, 2.2 * px, CORAL, 0.7)
+  for (const layer of METAL) {
+    // Dielectric haze pushes everything already drawn a step deeper
+    ctx.fillStyle = 'rgba(7, 9, 13, 0.32)'
+    ctx.fillRect(v.l - 1, v.t - 1, v.r - v.l + 2, v.b - v.t + 2)
+    drawMetal(ctx, v, layer, ex * (1 - layer.depth), ey * (1 - layer.depth), keepOut)
+  }
+
+  // Live nets: a pulse climbs through the stack and leaves a fading trail
+  for (const net of NETS) {
+    const total = pathLength(net.pts)
+    const head = ((t0 * net.speed + net.phase) % 1.4) * total
+    let walked = 0
+    for (let i = 1; i < net.pts.length; i++) {
+      const [x1, y1] = net.pts[i - 1]
+      const [x2, y2] = net.pts[i]
+      const len = Math.hypot(x2 - x1, y2 - y1)
+      const from = walked
+      walked += len
+      if (!len) continue
+      const layer = METAL[Math.min(i - 1, METAL.length - 1)]
+      const d = 1 - layer.depth
+      const ox = ex * d
+      const oy = ey * d
+      const lit0 = Math.max(0, Math.min(len, head - from - total * 0.35))
+      const lit1 = Math.max(0, Math.min(len, head - from))
+      if (lit1 <= lit0) continue
+      const ux = (x2 - x1) / len
+      const uy = (y2 - y1) / len
+      const g = ctx.createLinearGradient(x1 + ux * lit0 + ox, y1 + uy * lit0 + oy, x1 + ux * lit1 + ox, y1 + uy * lit1 + oy)
+      g.addColorStop(0, rgba(CORAL, 0))
+      g.addColorStop(1, rgba(CORAL, 0.85))
+      ctx.strokeStyle = g
+      ctx.lineWidth = Math.max(layer.width * 0.9, 2 * px)
+      ctx.lineCap = 'butt'
+      line(ctx, x1 + ux * lit0 + ox, y1 + uy * lit0 + oy, x1 + ux * lit1 + ox, y1 + uy * lit1 + oy)
+      if (head - from < len && head > from) glow(ctx, x1 + ux * lit1 + ox, y1 + uy * lit1 + oy, 2.4 * px, CORAL, 0.9)
+    }
   }
 
   // The transistor from above: three stacked sheets under one gate, with contacts.
   // It takes over from the cross-section as that fades.
   rr(ctx, -c, -c, 2 * c, 2 * c)
-  ctx.fillStyle = '#10141c'
+  ctx.fillStyle = '#0e1219'
   ctx.fill()
-  ctx.fillStyle = 'rgba(110, 130, 160, 0.55)'
-  ctx.fillRect(-c * 0.9, -c * 0.28, c * 1.8, c * 0.56)
-  ctx.fillStyle = 'rgba(30, 22, 30, 0.95)'
-  ctx.fillRect(-c * 0.16, -c * 0.85, c * 0.32, c * 1.7)
+  ctx.fillStyle = 'rgba(96, 116, 146, 0.6)'
+  ctx.fillRect(-c * 0.9, -c * 0.26, c * 1.8, c * 0.52)
+  ctx.fillStyle = 'rgba(26, 20, 28, 0.96)'
+  ctx.fillRect(-c * 0.15, -c * 0.85, c * 0.3, c * 1.7)
   ctx.strokeStyle = rgba(CORAL, 0.35 + 0.25 * Math.sin(t0 * 1.3))
   ctx.lineWidth = px * 1.5
-  ctx.strokeRect(-c * 0.16, -c * 0.85, c * 0.32, c * 1.7)
-  ctx.fillStyle = 'rgba(30, 34, 44, 1)'
+  ctx.strokeRect(-c * 0.15, -c * 0.85, c * 0.3, c * 1.7)
+  ctx.fillStyle = 'rgba(28, 32, 42, 1)'
   for (const x of [-0.62, 0.42]) ctx.fillRect(x * c, -c * 0.2, c * 0.2, c * 0.4)
 }
 
@@ -926,126 +980,352 @@ function drawServer(ctx, v) {
 
 // Devices around the server, as positions in this scene's units
 export const DEVICES = [
-  { kind: 'phone', x: -0.9, y: -0.62 },
-  { kind: 'laptop', x: 0.05, y: -0.9 },
+  { kind: 'phone', x: -0.9, y: -0.6 },
+  { kind: 'laptop', x: 0.05, y: -0.92 },
   { kind: 'switch', x: 1.05, y: -0.55 },
-  { kind: 'rack', x: 1.25, y: 0.38 },
-  { kind: 'car', x: -0.25, y: 0.9 },
-  { kind: 'satellite', x: -1.05, y: 0.42 },
-  { kind: 'headset', x: 0.7, y: 0.92 },
+  { kind: 'rack', x: 1.3, y: 0.4 },
+  { kind: 'car', x: -0.2, y: 0.9 },
+  { kind: 'satellite', x: -1.12, y: 0.38 },
+  { kind: 'headset', x: 0.72, y: 0.95 },
 ]
 
-function deviceStroke(ctx, v, a) {
-  ctx.strokeStyle = `rgba(232, 238, 248, ${a})`
-  ctx.lineWidth = 1.4 * v.px
-  ctx.lineJoin = 'round'
-  ctx.lineCap = 'round'
-}
-
-function deviceFill(ctx, x, y, w, h, r) {
+function screenGlow(ctx, x, y, w, h, r, t0) {
   const g = ctx.createLinearGradient(x, y, x + w, y + h)
-  g.addColorStop(0, 'rgba(40, 46, 58, 0.9)')
-  g.addColorStop(1, 'rgba(14, 16, 22, 0.9)')
+  g.addColorStop(0, '#1a2a6c')
+  g.addColorStop(0.55, '#3c2370')
+  g.addColorStop(1, '#0c1130')
   rr(ctx, x, y, w, h, r)
   ctx.fillStyle = g
   ctx.fill()
+  const bloom = ctx.createRadialGradient(x + w * 0.3, y + h * 0.35, 0, x + w * 0.3, y + h * 0.35, Math.max(w, h) * 0.7)
+  bloom.addColorStop(0, `rgba(255, 120, 160, ${0.28 + 0.06 * Math.sin(t0)})`)
+  bloom.addColorStop(1, 'rgba(255, 120, 160, 0)')
+  ctx.fillStyle = bloom
+  ctx.fill()
+}
+
+function drawPhone(ctx, v) {
+  const t = v.t0
+  shadow(ctx, v, -0.075, -0.15, 0.15, 0.3, { r: 0.03, d: 6, blur: 16, a: 0.7 })
+  lit(ctx, v, -0.075, -0.15, 0.15, 0.3, { r: 0.03, top: '#5a606b', bottom: '#1b1d22', edge: 0.45, rim: 0.6 })
+  rr(ctx, -0.069, -0.144, 0.138, 0.288, 0.026)
+  ctx.fillStyle = '#050608'
+  ctx.fill()
+  screenGlow(ctx, -0.064, -0.139, 0.128, 0.278, 0.022, t)
+  // App grid and dock
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.16)'
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 5; j++) {
+      rr(ctx, -0.052 + i * 0.027, -0.1 + j * 0.034, 0.02, 0.02, 0.005)
+      ctx.fill()
+    }
+  }
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'
+  rr(ctx, -0.056, 0.098, 0.112, 0.03, 0.01)
+  ctx.fill()
+  rr(ctx, -0.018, -0.132, 0.036, 0.009, 0.0045)
+  ctx.fillStyle = '#000'
+  ctx.fill()
+  ctx.save()
+  rr(ctx, -0.064, -0.139, 0.128, 0.278, 0.022)
+  ctx.clip()
+  sweep(ctx, v, -0.064, -0.139, 0.128, 0.278, 6, 0.12)
+  ctx.restore()
+}
+
+function drawLaptop(ctx, v) {
+  const t = v.t0
+  shadow(ctx, v, -0.21, 0.08, 0.42, 0.05, { d: 6, blur: 16, a: 0.7 })
+  // Display lid
+  lit(ctx, v, -0.18, -0.15, 0.36, 0.235, { r: 0.012, top: '#2a2d33', bottom: '#0f1013', edge: 0.3 })
+  rr(ctx, -0.17, -0.14, 0.34, 0.212, 0.006)
+  ctx.fillStyle = '#0b0e16'
+  ctx.fill()
+  // An editor on screen: line numbers and code of varying length
+  const colors = ['rgba(255, 140, 120, 0.7)', 'rgba(150, 190, 255, 0.7)', 'rgba(180, 230, 160, 0.65)', 'rgba(220, 220, 230, 0.5)']
+  for (let i = 0; i < 12; i++) {
+    const y = -0.128 + i * 0.016
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'
+    ctx.fillRect(-0.16, y, 0.008, 0.006)
+    let x = -0.145 + (hash(i, 2) > 0.6 ? 0.016 : 0)
+    const words = 1 + Math.floor(hash(i, 3) * 4)
+    for (let k = 0; k < words; k++) {
+      const w = 0.015 + hash(i, k + 4) * 0.05
+      ctx.fillStyle = colors[Math.floor(hash(k, i) * colors.length)]
+      ctx.fillRect(x, y, w, 0.006)
+      x += w + 0.008
+    }
+  }
+  const caret = Math.floor(t * 2) % 2
+  if (caret) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)'
+    ctx.fillRect(-0.06, -0.128 + 11 * 0.016 - 0.002, 0.003, 0.01)
+  }
+  // Keyboard deck in slight perspective
+  ctx.beginPath()
+  ctx.moveTo(-0.18, 0.085)
+  ctx.lineTo(0.18, 0.085)
+  ctx.lineTo(0.215, 0.13)
+  ctx.lineTo(-0.215, 0.13)
+  ctx.closePath()
+  const deck = ctx.createLinearGradient(0, 0.085, 0, 0.13)
+  deck.addColorStop(0, '#8b9099')
+  deck.addColorStop(1, '#4a4e56')
+  ctx.fillStyle = deck
+  ctx.fill()
+  ctx.fillStyle = 'rgba(20, 22, 26, 0.85)'
+  for (let row = 0; row < 3; row++) {
+    const y = 0.089 + row * 0.009
+    const spread = 0.165 + row * 0.006
+    for (let k = 0; k < 14; k++) ctx.fillRect(-spread + k * (spread * 2) / 14, y, (spread * 2) / 14 - 0.003, 0.006)
+  }
+  ctx.fillStyle = 'rgba(30, 32, 38, 0.5)'
+  ctx.fillRect(-0.04, 0.118, 0.08, 0.009)
+}
+
+function drawSwitch(ctx, v) {
+  const t = textures()
+  shadow(ctx, v, -0.25, -0.045, 0.5, 0.09, { d: 6, blur: 14, a: 0.7 })
+  lit(ctx, v, -0.25, -0.045, 0.5, 0.09, { r: 0.004, top: '#3d4149', bottom: '#1c1e23', edge: 0.35 })
+  ctx.fillStyle = pattern(ctx, t.brushed, 0.3)
+  ctx.fillRect(-0.25, -0.045, 0.5, 0.09)
+  // Rack ears with screw holes
+  for (const x of [-0.25, 0.225]) {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)'
+    ctx.fillRect(x, -0.045, 0.025, 0.09)
+    ctx.fillStyle = '#0a0b0e'
+    ctx.beginPath()
+    ctx.arc(x + 0.0125, 0, 0.005, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  // Two rows of copper ports, link LEDs blinking with traffic
+  for (let k = 0; k < 12; k++) {
+    for (let row = 0; row < 2; row++) {
+      const x = -0.205 + k * 0.026
+      const y = -0.028 + row * 0.03
+      ctx.fillStyle = '#060709'
+      ctx.fillRect(x, y, 0.021, 0.019)
+      ctx.fillStyle = 'rgba(214, 176, 112, 0.5)'
+      ctx.fillRect(x + 0.004, y + 0.003, 0.013, 0.002)
+      const on = hash(k + row * 12, Math.floor(v.t0 * (6 + hash(k, row) * 8))) > 0.45
+      ctx.fillStyle = on ? (row ? 'rgba(255, 190, 80, 0.95)' : 'rgba(120, 255, 160, 0.95)') : 'rgba(255, 255, 255, 0.06)'
+      ctx.fillRect(x + 0.016, y + 0.0145, 0.004, 0.003)
+    }
+  }
+  // Optical cages
+  for (let k = 0; k < 4; k++) {
+    lit(ctx, v, 0.118 + k * 0.026, -0.028, 0.022, 0.049, { top: '#a6abb4', bottom: '#5c6068', edge: 0.4 })
+    ctx.fillStyle = '#08090b'
+    ctx.fillRect(0.122 + k * 0.026, -0.022, 0.014, 0.037)
+  }
+}
+
+function drawRack(ctx, v) {
+  const t = textures()
+  shadow(ctx, v, -0.11, -0.28, 0.22, 0.56, { r: 0.008, d: 8, blur: 20, a: 0.75 })
+  lit(ctx, v, -0.11, -0.28, 0.22, 0.56, { r: 0.008, top: '#24272d', bottom: '#0d0e11', edge: 0.3 })
+  // Units, each with a vent grille and status LEDs
+  for (let k = 0; k < 13; k++) {
+    const y = -0.262 + k * 0.04
+    lit(ctx, v, -0.095, y, 0.19, 0.034, { top: '#30343b', bottom: '#191b1f', edge: 0.25 })
+    ctx.fillStyle = pattern(ctx, t.grille, 0.006)
+    ctx.fillRect(-0.088, y + 0.006, 0.11, 0.022)
+    for (let j = 0; j < 3; j++) {
+      const on = hash(k * 3 + j, Math.floor(v.t0 * (3 + hash(k, j) * 5))) > 0.35
+      ctx.fillStyle = on ? ['rgba(90, 170, 255, 0.95)', 'rgba(120, 255, 170, 0.9)', 'rgba(255, 190, 90, 0.9)'][j] : 'rgba(255, 255, 255, 0.05)'
+      ctx.fillRect(0.04 + j * 0.013, y + 0.014, 0.006, 0.006)
+    }
+  }
+  // Glass door reflection
+  ctx.save()
+  rr(ctx, -0.11, -0.28, 0.22, 0.56, 0.008)
+  ctx.clip()
+  sweep(ctx, v, -0.11, -0.28, 0.22, 0.56, 8, 0.07)
+  ctx.restore()
+}
+
+function drawCar(ctx, v) {
+  const t = v.t0
+  // Ground shadow
+  const gs = ctx.createRadialGradient(0, 0.065, 0, 0, 0.065, 0.26)
+  gs.addColorStop(0, 'rgba(0, 0, 0, 0.6)')
+  gs.addColorStop(1, 'rgba(0, 0, 0, 0)')
+  ctx.fillStyle = gs
+  ctx.fillRect(-0.3, 0.03, 0.6, 0.07)
+  // Body
+  ctx.beginPath()
+  ctx.moveTo(-0.25, 0.04)
+  ctx.lineTo(-0.252, 0.005)
+  ctx.quadraticCurveTo(-0.245, -0.025, -0.2, -0.032)
+  ctx.quadraticCurveTo(-0.12, -0.04, -0.075, -0.085)
+  ctx.quadraticCurveTo(0, -0.1, 0.07, -0.085)
+  ctx.quadraticCurveTo(0.12, -0.045, 0.21, -0.03)
+  ctx.quadraticCurveTo(0.25, -0.02, 0.252, 0.01)
+  ctx.lineTo(0.25, 0.04)
+  ctx.closePath()
+  const body = ctx.createLinearGradient(0, -0.1, 0, 0.04)
+  body.addColorStop(0, '#5d6470')
+  body.addColorStop(0.45, '#2a2e36')
+  body.addColorStop(1, '#121418')
+  ctx.fillStyle = body
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)'
+  ctx.lineWidth = v.px
+  ctx.stroke()
+  // Glass
+  ctx.beginPath()
+  ctx.moveTo(-0.11, -0.038)
+  ctx.quadraticCurveTo(-0.07, -0.078, -0.03, -0.083)
+  ctx.lineTo(0.06, -0.081)
+  ctx.quadraticCurveTo(0.09, -0.06, 0.11, -0.036)
+  ctx.closePath()
+  const glass = ctx.createLinearGradient(-0.1, -0.08, 0.1, -0.03)
+  glass.addColorStop(0, '#2c3a52')
+  glass.addColorStop(0.5, '#6f86a8')
+  glass.addColorStop(1, '#1a2232')
+  ctx.fillStyle = glass
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(10, 12, 16, 0.9)'
+  ctx.lineWidth = 0.006
+  line(ctx, 0.005, -0.083, 0.005, -0.036)
+  // Shoulder line and door seam
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)'
+  ctx.lineWidth = v.px
+  line(ctx, -0.22, -0.012, 0.22, -0.012)
+  line(ctx, 0.005, -0.03, 0.01, 0.03)
+  // Wheels, turning
+  for (const x of [-0.15, 0.15]) {
+    ctx.fillStyle = '#07080a'
+    ctx.beginPath()
+    ctx.arc(x, 0.04, 0.042, 0, Math.PI * 2)
+    ctx.fill()
+    const rim = ctx.createRadialGradient(x - 0.008, 0.032, 0, x, 0.04, 0.028)
+    rim.addColorStop(0, '#d7dbe2')
+    rim.addColorStop(1, '#5b6068')
+    ctx.fillStyle = rim
+    ctx.beginPath()
+    ctx.arc(x, 0.04, 0.026, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(20, 22, 26, 0.8)'
+    ctx.lineWidth = 0.004
+    for (let k = 0; k < 5; k++) {
+      const a = t * 3 + (k * Math.PI * 2) / 5
+      line(ctx, x, 0.04, x + Math.cos(a) * 0.024, 0.04 + Math.sin(a) * 0.024)
+    }
+  }
+  glow(ctx, 0.245, -0.01, 2.2 * v.px, '255, 244, 220', 0.95)
+  glow(ctx, -0.248, -0.008, 2 * v.px, '255, 60, 60', 0.8)
+}
+
+function drawSatellite(ctx, v) {
+  const t = textures()
+  // Solar wings
+  for (const side of [-1, 1]) {
+    const x = side > 0 ? 0.075 : -0.255
+    ctx.strokeStyle = 'rgba(200, 205, 215, 0.6)'
+    ctx.lineWidth = 0.004
+    line(ctx, side * 0.045, 0, side * 0.075, 0)
+    lit(ctx, v, x, -0.045, 0.18, 0.09, { top: '#1d2f6a', bottom: '#0b1430', edge: 0.3 })
+    ctx.strokeStyle = 'rgba(140, 170, 255, 0.25)'
+    ctx.lineWidth = v.px
+    for (let k = 1; k < 8; k++) line(ctx, x + k * 0.0225, -0.045, x + k * 0.0225, 0.045)
+    line(ctx, x, 0, x + 0.18, 0)
+    ctx.save()
+    rr(ctx, x, -0.045, 0.18, 0.09)
+    ctx.clip()
+    sweep(ctx, v, x, -0.045, 0.18, 0.09, 5 + side, 0.22)
+    ctx.restore()
+  }
+  // Body wrapped in gold foil
+  shadow(ctx, v, -0.045, -0.06, 0.09, 0.12, { d: 4, blur: 10, a: 0.6 })
+  lit(ctx, v, -0.045, -0.06, 0.09, 0.12, { r: 0.006, top: '#e6c06a', bottom: '#7a5420', edge: 0.4 })
+  ctx.fillStyle = pattern(ctx, t.speck, 0.05)
+  ctx.globalCompositeOperation = 'overlay'
+  ctx.fillRect(-0.045, -0.06, 0.09, 0.12)
+  ctx.globalCompositeOperation = 'source-over'
+  for (let k = 0; k < 5; k++) {
+    ctx.fillStyle = `rgba(255, 240, 200, ${0.15 + hash(k, 1) * 0.2})`
+    ctx.beginPath()
+    ctx.moveTo(-0.04 + hash(k, 2) * 0.06, -0.055 + hash(k, 3) * 0.1)
+    ctx.lineTo(-0.03 + hash(k, 4) * 0.06, -0.05 + hash(k, 5) * 0.1)
+    ctx.lineTo(-0.035 + hash(k, 6) * 0.06, -0.045 + hash(k, 7) * 0.1)
+    ctx.fill()
+  }
+  // Antenna dish
+  ctx.fillStyle = '#d8dce3'
+  ctx.beginPath()
+  ctx.ellipse(0, -0.085, 0.032, 0.014, 0, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(200, 205, 215, 0.7)'
+  ctx.lineWidth = 0.003
+  line(ctx, 0, -0.07, 0, -0.06)
+  glow(ctx, 0, -0.1, 1.6 * v.px, '120, 200, 255', 0.6 + 0.4 * Math.sin(v.t0 * 2))
+}
+
+function drawHeadset(ctx, v) {
+  shadow(ctx, v, -0.13, -0.05, 0.26, 0.11, { r: 0.04, d: 6, blur: 14, a: 0.7 })
+  // Strap behind the visor
+  ctx.strokeStyle = '#2a2d33'
+  ctx.lineWidth = 0.022
+  ctx.beginPath()
+  ctx.moveTo(-0.12, 0)
+  ctx.quadraticCurveTo(-0.2, -0.04, -0.17, -0.08)
+  ctx.moveTo(0.12, 0)
+  ctx.quadraticCurveTo(0.2, -0.04, 0.17, -0.08)
+  ctx.stroke()
+  // Visor: glossy black shell with a lit band
+  ctx.beginPath()
+  ctx.moveTo(-0.13, -0.04)
+  ctx.quadraticCurveTo(0, -0.07, 0.13, -0.04)
+  ctx.quadraticCurveTo(0.142, 0.01, 0.12, 0.05)
+  ctx.quadraticCurveTo(0.06, 0.062, 0.025, 0.04)
+  ctx.quadraticCurveTo(0, 0.028, -0.025, 0.04)
+  ctx.quadraticCurveTo(-0.06, 0.062, -0.12, 0.05)
+  ctx.quadraticCurveTo(-0.142, 0.01, -0.13, -0.04)
+  ctx.closePath()
+  const shell = ctx.createLinearGradient(0, -0.07, 0, 0.06)
+  shell.addColorStop(0, '#3a3e47')
+  shell.addColorStop(0.3, '#0c0d10')
+  shell.addColorStop(1, '#050506')
+  ctx.fillStyle = shell
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)'
+  ctx.lineWidth = v.px
+  ctx.stroke()
+  ctx.save()
+  ctx.clip()
+  const band = ctx.createLinearGradient(-0.13, -0.03, 0.13, 0.0)
+  band.addColorStop(0, 'rgba(110, 91, 216, 0)')
+  band.addColorStop(0.5, `rgba(140, 200, 255, ${0.25 + 0.1 * Math.sin(v.t0 * 1.5)})`)
+  band.addColorStop(1, 'rgba(110, 91, 216, 0)')
+  ctx.fillStyle = band
+  ctx.fillRect(-0.14, -0.035, 0.28, 0.012)
+  ctx.restore()
+  // Tracking cameras
+  ctx.fillStyle = '#000'
+  for (const x of [-0.1, 0.1]) {
+    ctx.beginPath()
+    ctx.arc(x, -0.01, 0.007, 0, Math.PI * 2)
+    ctx.fill()
+  }
+}
+
+const DEVICE_DRAW = {
+  phone: drawPhone,
+  laptop: drawLaptop,
+  switch: drawSwitch,
+  rack: drawRack,
+  car: drawCar,
+  satellite: drawSatellite,
+  headset: drawHeadset,
 }
 
 function drawDevice(ctx, v, d, s, a) {
   ctx.save()
   ctx.translate(d.x, d.y)
   ctx.scale(s, s)
-  const vv = { ...v, px: v.px / s }
-  deviceStroke(ctx, vv, a)
-  switch (d.kind) {
-    case 'phone':
-      deviceFill(ctx, -0.07, -0.14, 0.14, 0.28, 0.025)
-      ctx.stroke()
-      ctx.fillStyle = `rgba(110, 140, 220, ${0.25 * a})`
-      rr(ctx, -0.058, -0.122, 0.116, 0.244, 0.016)
-      ctx.fill()
-      line(ctx, -0.02, -0.128, 0.02, -0.128)
-      break
-    case 'laptop':
-      deviceFill(ctx, -0.16, -0.12, 0.32, 0.2, 0.012)
-      ctx.stroke()
-      ctx.fillStyle = `rgba(110, 140, 220, ${0.22 * a})`
-      ctx.fillRect(-0.145, -0.105, 0.29, 0.17)
-      ctx.beginPath()
-      ctx.moveTo(-0.2, 0.1)
-      ctx.lineTo(0.2, 0.1)
-      ctx.lineTo(0.18, 0.125)
-      ctx.lineTo(-0.18, 0.125)
-      ctx.closePath()
-      ctx.stroke()
-      break
-    case 'switch':
-      deviceFill(ctx, -0.2, -0.04, 0.4, 0.08, 0.008)
-      ctx.stroke()
-      for (let k = 0; k < 12; k++) {
-        ctx.strokeRect(-0.17 + k * 0.026, -0.018, 0.018, 0.016)
-        const lit = hash(k, Math.floor(v.t0 * 5)) > 0.5
-        ctx.fillStyle = lit ? `rgba(120, 255, 170, ${a})` : `rgba(255, 255, 255, ${0.1 * a})`
-        ctx.fillRect(-0.168 + k * 0.026, 0.012, 0.006, 0.006)
-      }
-      break
-    case 'rack':
-      deviceFill(ctx, -0.09, -0.24, 0.18, 0.48, 0.008)
-      ctx.stroke()
-      for (let k = 0; k < 10; k++) {
-        line(ctx, -0.075, -0.21 + k * 0.045, 0.075, -0.21 + k * 0.045)
-        const on = hash(k, Math.floor(v.t0 * 3)) > 0.35
-        ctx.fillStyle = on ? `rgba(120, 190, 255, ${a})` : `rgba(255, 255, 255, ${0.08 * a})`
-        ctx.fillRect(0.05, -0.2 + k * 0.045, 0.008, 0.008)
-      }
-      break
-    case 'car':
-      ctx.beginPath()
-      ctx.moveTo(-0.22, 0.03)
-      ctx.lineTo(-0.2, -0.02)
-      ctx.quadraticCurveTo(-0.1, -0.03, -0.06, -0.08)
-      ctx.lineTo(0.08, -0.08)
-      ctx.quadraticCurveTo(0.13, -0.03, 0.21, -0.015)
-      ctx.lineTo(0.22, 0.03)
-      ctx.closePath()
-      ctx.fillStyle = 'rgba(30, 36, 46, 0.9)'
-      ctx.fill()
-      ctx.stroke()
-      for (const x of [-0.13, 0.13]) {
-        ctx.beginPath()
-        ctx.arc(x, 0.035, 0.032, 0, Math.PI * 2)
-        ctx.fillStyle = '#0a0b0e'
-        ctx.fill()
-        ctx.stroke()
-      }
-      glow(ctx, 0.21, -0.005, 1.6 * vv.px, '255, 240, 200', 0.6 * a)
-      break
-    case 'satellite':
-      deviceFill(ctx, -0.04, -0.05, 0.08, 0.1, 0.006)
-      ctx.stroke()
-      for (const side of [-1, 1]) {
-        ctx.fillStyle = `rgba(70, 100, 180, ${0.45 * a})`
-        ctx.fillRect(side > 0 ? 0.06 : -0.2, -0.035, 0.14, 0.07)
-        ctx.strokeRect(side > 0 ? 0.06 : -0.2, -0.035, 0.14, 0.07)
-        line(ctx, side * 0.04, 0, side * 0.06, 0)
-        for (let k = 1; k < 4; k++) line(ctx, side > 0 ? 0.06 + k * 0.035 : -0.2 + k * 0.035, -0.035, side > 0 ? 0.06 + k * 0.035 : -0.2 + k * 0.035, 0.035)
-      }
-      break
-    case 'headset':
-      ctx.beginPath()
-      ctx.moveTo(-0.13, -0.04)
-      ctx.quadraticCurveTo(0, -0.08, 0.13, -0.04)
-      ctx.lineTo(0.13, 0.04)
-      ctx.quadraticCurveTo(0.06, 0.05, 0.03, 0.02)
-      ctx.quadraticCurveTo(0, 0.0, -0.03, 0.02)
-      ctx.quadraticCurveTo(-0.06, 0.05, -0.13, 0.04)
-      ctx.closePath()
-      ctx.fillStyle = 'rgba(30, 36, 46, 0.9)'
-      ctx.fill()
-      ctx.stroke()
-      break
-    default:
-  }
+  ctx.globalAlpha *= a
+  DEVICE_DRAW[d.kind](ctx, { ...v, px: v.px / s })
   ctx.restore()
 }
 
@@ -1086,7 +1366,7 @@ function drawWorld(ctx, v) {
       glow(ctx, x, y, 2 * px, CORAL, 0.8 * Math.sin(f * Math.PI))
     }
     const bob = Math.sin(t0 * 0.8 + i) * 0.012
-    drawDevice(ctx, v, { ...d, y: d.y + bob }, 1 + near * 0.12, 0.55 + 0.45 * near)
+    drawDevice(ctx, v, { ...d, y: d.y + bob }, 1 + near * 0.1, 0.82 + 0.18 * near)
   }
 
   // The server we came from, glowing at the center

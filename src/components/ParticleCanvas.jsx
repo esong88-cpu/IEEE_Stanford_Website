@@ -1,186 +1,200 @@
 import { useEffect, useRef } from 'react'
 
+const GRID = 28 // dot grid spacing
+const LINK = 140 // max distance for particle–particle lines
+const REACH = 220 // cursor influence radius
+
 /**
- * Canvas-based animated particle network — nodes connected by lines,
- * with a subtle mouse repulsion effect. Fits the IEEE circuit-board aesthetic.
+ * Hero background: a faint dot grid that lights up around the cursor, plus a drifting
+ * particle network whose nodes link to the cursor. Listens on `targetRef` (the hero
+ * section) so the content above the canvas stays clickable.
  */
-export default function ParticleCanvas() {
+export default function ParticleCanvas({ targetRef }) {
   const canvasRef = useRef(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return
-    }
-
     const ctx = canvas.getContext('2d')
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-    let raf
-    const N = window.innerWidth < 768 ? 30 : 60
-    const LINK = 150
+    let w = 0
+    let h = 0
     let pts = []
-    const mouse = { x: null, y: null }
+    const mouse = { x: -9999, y: -9999 }
 
-    function resize(preserve = true) {
-      const w = Math.round(canvas.clientWidth)
-      const h = Math.round(canvas.clientHeight)
-      if (!w || !h) return
-
-      const prevW = canvas.width
-      const prevH = canvas.height
-
-      if (preserve && prevW > 0 && prevH > 0 && pts.length) {
-        const sx = w / prevW
-        const sy = h / prevH
+    function resize() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      const nw = canvas.clientWidth
+      const nh = canvas.clientHeight
+      if (!nw || !nh) return
+      // Scale particles instead of re-seeding, so mobile URL-bar resizes don't jump.
+      if (w && h) {
         for (const p of pts) {
-          p.x *= sx
-          p.y *= sy
+          p.x *= nw / w
+          p.y *= nh / h
         }
       }
+      w = nw
+      h = nh
+      canvas.width = Math.round(w * dpr)
+      canvas.height = Math.round(h * dpr)
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-      canvas.width = w
-      canvas.height = h
+      const n = Math.min(110, Math.round((w * h) / 13000))
+      while (pts.length < n) {
+        pts.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: (Math.random() - 0.5) * 0.35,
+          vy: (Math.random() - 0.5) * 0.35,
+          r: Math.random() * 1.4 + 0.6,
+          phase: Math.random() * Math.PI * 2,
+        })
+      }
+      pts.length = n
     }
 
-    function mkPt() {
-      return {
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
-        r: Math.random() * 1.6 + 0.7,
-        baseAlpha: Math.random() * 0.45 + 0.25,
-        phase: Math.random() * Math.PI * 2,
+    function drawGrid() {
+      for (let gx = GRID / 2; gx < w; gx += GRID) {
+        for (let gy = GRID / 2; gy < h; gy += GRID) {
+          const dx = gx - mouse.x
+          const dy = gy - mouse.y
+          const d = Math.sqrt(dx * dx + dy * dy)
+          const k = d < REACH ? 1 - d / REACH : 0
+          const a = 0.09 + k * 0.95
+          const s = 1.2 + k * 1.8
+          ctx.fillStyle = k
+            ? `rgba(255, ${Math.round(200 - k * 110)}, ${Math.round(190 - k * 110)}, ${a})`
+            : `rgba(255, 255, 255, ${a})`
+          // Lit dots lean slightly toward the cursor.
+          ctx.fillRect(gx - s / 2 - dx * k * 0.12, gy - s / 2 - dy * k * 0.12, s, s)
+        }
       }
     }
 
-    function init() {
-      resize(false)
-      pts = Array.from({ length: N }, mkPt)
-    }
-
-    let t = 0
-    function frame() {
-      raf = requestAnimationFrame(frame)
-      if (!canvas.width || !canvas.height) return
-
-      t += 0.016
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
+    function step() {
       for (const p of pts) {
-        if (mouse.x !== null) {
-          const dx = p.x - mouse.x
-          const dy = p.y - mouse.y
-          const d2 = dx * dx + dy * dy
-          if (d2 < 12000) {
-            const d = Math.sqrt(d2)
-            const f = ((110 - d) / 110) * 0.18
-            p.vx += (dx / d) * f
-            p.vy += (dy / d) * f
-          }
+        const dx = p.x - mouse.x
+        const dy = p.y - mouse.y
+        const d2 = dx * dx + dy * dy
+        if (d2 < 14000 && d2 > 1) {
+          const d = Math.sqrt(d2)
+          const f = ((118 - d) / 118) * 0.12
+          p.vx += (dx / d) * f
+          p.vy += (dy / d) * f
         }
-        const spd = Math.sqrt(p.vx * p.vx + p.vy * p.vy)
-        if (spd > 1.5) {
-          p.vx = (p.vx / spd) * 1.5
-          p.vy = (p.vy / spd) * 1.5
+        const spd = Math.hypot(p.vx, p.vy)
+        if (spd > 1.4) {
+          p.vx = (p.vx / spd) * 1.4
+          p.vy = (p.vy / spd) * 1.4
         }
-        p.vx *= 0.999
-        p.vy *= 0.999
-
+        p.vx *= 0.995
+        p.vy *= 0.995
         p.x += p.vx
         p.y += p.vy
-
-        if (p.x < -5) p.x = canvas.width + 5
-        else if (p.x > canvas.width + 5) p.x = -5
-        if (p.y < -5) p.y = canvas.height + 5
-        else if (p.y > canvas.height + 5) p.y = -5
+        if (p.x < -10) p.x = w + 10
+        else if (p.x > w + 10) p.x = -10
+        if (p.y < -10) p.y = h + 10
+        else if (p.y > h + 10) p.y = -10
       }
+    }
 
+    function drawNetwork(t) {
+      ctx.lineWidth = 0.7
       for (let i = 0; i < pts.length; i++) {
+        const a = pts[i]
         for (let j = i + 1; j < pts.length; j++) {
-          const dx = pts[i].x - pts[j].x
-          const dy = pts[i].y - pts[j].y
-          const d = Math.sqrt(dx * dx + dy * dy)
+          const b = pts[j]
+          const d = Math.hypot(a.x - b.x, a.y - b.y)
           if (d < LINK) {
-            const a = (1 - d / LINK) * 0.5
+            ctx.strokeStyle = `rgba(220, 70, 64, ${(1 - d / LINK) * 0.42})`
             ctx.beginPath()
-            ctx.moveTo(pts[i].x, pts[i].y)
-            ctx.lineTo(pts[j].x, pts[j].y)
-            ctx.strokeStyle = `rgba(200, 70, 70, ${a})`
-            ctx.lineWidth = 0.8
+            ctx.moveTo(a.x, a.y)
+            ctx.lineTo(b.x, b.y)
             ctx.stroke()
           }
         }
+        const md = Math.hypot(a.x - mouse.x, a.y - mouse.y)
+        if (md < REACH) {
+          ctx.strokeStyle = `rgba(255, 120, 110, ${(1 - md / REACH) * 0.55})`
+          ctx.beginPath()
+          ctx.moveTo(a.x, a.y)
+          ctx.lineTo(mouse.x, mouse.y)
+          ctx.stroke()
+        }
       }
-
       for (const p of pts) {
-        const alpha = p.baseAlpha + Math.sin(t * 1.2 + p.phase) * 0.1
-        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 5)
-        g.addColorStop(0, `rgba(210, 60, 60, ${alpha * 0.55})`)
-        g.addColorStop(1, 'rgba(210, 60, 60, 0)')
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r * 5, 0, Math.PI * 2)
+        const alpha = 0.55 + Math.sin(t * 1.3 + p.phase) * 0.2
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 6)
+        g.addColorStop(0, `rgba(230, 70, 64, ${alpha * 0.5})`)
+        g.addColorStop(1, 'rgba(230, 70, 64, 0)')
         ctx.fillStyle = g
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.r * 6, 0, Math.PI * 2)
         ctx.fill()
+        ctx.fillStyle = `rgba(255, 170, 160, ${alpha})`
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(255, 130, 130, ${alpha})`
         ctx.fill()
       }
     }
 
-    init()
-    frame()
-
-    const clearMouse = () => {
-      mouse.x = null
-      mouse.y = null
+    function draw(t) {
+      ctx.clearRect(0, 0, w, h)
+      if (mouse.x > -999) {
+        const halo = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, REACH * 1.3)
+        halo.addColorStop(0, 'rgba(255, 70, 60, 0.16)')
+        halo.addColorStop(1, 'rgba(255, 70, 60, 0)')
+        ctx.fillStyle = halo
+        ctx.fillRect(mouse.x - REACH * 1.3, mouse.y - REACH * 1.3, REACH * 2.6, REACH * 2.6)
+      }
+      drawGrid()
+      drawNetwork(t)
     }
 
-    const ro = new ResizeObserver(() => resize(true))
+    let raf
+    let t = 0
+    function frame() {
+      raf = requestAnimationFrame(frame)
+      if (!w) return
+      t += 0.016
+      step()
+      draw(t)
+    }
+
+    resize()
+    const ro = new ResizeObserver(resize)
     ro.observe(canvas)
 
-    // Mobile browsers fire resize when the URL bar shows/hides during scroll;
-    // scale particles instead of re-initing so the field doesn't jump.
-    let resizeTimer
-    const onWindowResize = () => {
-      clearTimeout(resizeTimer)
-      resizeTimer = setTimeout(() => resize(true), 150)
-    }
-    window.addEventListener('resize', onWindowResize)
-
+    const target = targetRef?.current || canvas
     const onMove = (e) => {
       const rect = canvas.getBoundingClientRect()
       mouse.x = e.clientX - rect.left
       mouse.y = e.clientY - rect.top
+      if (still) draw(0)
+    }
+    const onLeave = () => {
+      mouse.x = -9999
+      mouse.y = -9999
+      if (still) draw(0)
+    }
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches
+    if (finePointer) {
+      target.addEventListener('mousemove', onMove)
+      target.addEventListener('mouseleave', onLeave)
     }
 
-    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)')
-    if (finePointer.matches) {
-      window.addEventListener('mousemove', onMove)
-    }
-
-    document.addEventListener('touchstart', clearMouse, { passive: true })
-    document.addEventListener('scroll', clearMouse, { passive: true, capture: true })
+    if (still) draw(0)
+    else frame()
 
     return () => {
       cancelAnimationFrame(raf)
-      clearTimeout(resizeTimer)
       ro.disconnect()
-      window.removeEventListener('resize', onWindowResize)
-      window.removeEventListener('mousemove', onMove)
-      document.removeEventListener('touchstart', clearMouse)
-      document.removeEventListener('scroll', clearMouse, { capture: true })
+      target.removeEventListener('mousemove', onMove)
+      target.removeEventListener('mouseleave', onLeave)
     }
-  }, [])
+  }, [targetRef])
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="hero-particles"
-      aria-hidden
-    />
-  )
+  return <canvas ref={canvasRef} className="home-hero-canvas" aria-hidden />
 }

@@ -48,6 +48,7 @@ const upcomingEvents = [
 export default function MTTS() {
   return (
     <ChapterPage
+      chapterId="mtt-s"
       kicker="MTT-S Student Chapter"
       title="Microwave Theory and Technology"
       description="Technical talks, workshops, and networking around microwave engineering, wireless communications, and RF circuit design."

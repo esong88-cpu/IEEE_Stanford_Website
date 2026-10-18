@@ -27,7 +27,7 @@ export default function Chapters() {
 
         <div className="card-grid card-grid--2">
           {chapters.map((ch) => (
-            <article key={ch.id} className="chapter-card">
+            <article key={ch.id} className="chapter-card" style={{ '--chapter-accent': ch.accent }}>
               <div>
                 <h3 className="chapter-card-title">{ch.summaryTitle}</h3>
                 {ch.badge ? <span className="chapter-badge">{ch.badge}</span> : null}

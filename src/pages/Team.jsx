@@ -10,7 +10,6 @@ export default function Team() {
       name: 'Ethan Song',
       major: 'BS in Electrical Engineering',
       role: 'Chair',
-      bio: 'He is interested in photonics, semiconductors, and hardware systems. His experience includes event organizing at Duke University and involvement in various engineering activities at Stanford. Outside academics, he enjoys playing piano, MMA, swimming, and running.',
       href: 'https://www.linkedin.com/in/ethan-s0ng/'
     },
     {
@@ -19,7 +18,6 @@ export default function Team() {
       name: 'Fabian Cornejo',
       major: 'BS in Sustainable Systems and Power Engineering (IDMEN)',
       role: 'Vice Chair',
-      bio: 'He is passionate about sustainable energy systems and the intersection of electrical engineering with modern power infrastructure. His work centers on designing environmentally responsible engineering solutions.',
       href: 'https://www.linkedin.com/in/fabian-cornejo-8b9423282/'
     },
     {
@@ -28,7 +26,6 @@ export default function Team() {
       name: 'Hannah Shu',
       major: 'BS in Electrical Engineering',
       role: 'Finance',
-      bio: 'She focuses on signal processing, sensing systems, and perception for autonomous vehicles. She helps organize TreeHacks and manages finances for the IEEE Stanford Student Branch. In her free time, she enjoys photography and playing violin.',
       href: 'https://www.linkedin.com/in/hannah-shu/'
     },
     {
@@ -37,7 +34,6 @@ export default function Team() {
       name: 'Kierra Barr',
       major: 'BS in Electrical Engineering',
       role: 'Logistics',
-      bio: 'She studies physical science and technology within electrical engineering and is involved in event coordination for the branch. She enjoys watching basketball and playing tennis in her free time.',
       href: 'https://www.linkedin.com/in/kierra-barr/'
     },
     {
@@ -47,7 +43,6 @@ export default function Team() {
       name: 'Zane St. John',
       major: 'BS in Symbolic Systems',
       role: 'Logistics',
-      bio: '',
       href: 'https://www.linkedin.com/in/zaney/'
     },
     {
@@ -56,7 +51,6 @@ export default function Team() {
       name: 'Kristen Guernsey',
       major: 'MS in Electrical Engineering',
       role: 'Social',
-      bio: '',
       href: 'https://www.linkedin.com/in/kristen-guernsey/'
     },
     {
@@ -65,7 +59,6 @@ export default function Team() {
       name: 'Lydia Huang',
       major: 'MS in Electrical Engineering',
       role: 'Social',
-      bio: '',
       href: 'https://www.linkedin.com/in/lydia-huang-alakazoo'
     },
     {
@@ -74,7 +67,6 @@ export default function Team() {
       name: 'Brant Bueno',
       major: 'BS in Electrical Engineering',
       role: 'Industry',
-      bio: 'He is interested in embedded systems and the intersection of AI/ML with hardware. His experience includes interning at Amazon on modular computer vision devices and supporting corporate relations through SHPE and the Computer Forum. Outside academics, he enjoys organizing, community outreach, and spending time with friends.',
       href: 'https://www.linkedin.com/in/brant-bueno/'
     },
     {
@@ -83,7 +75,6 @@ export default function Team() {
       name: 'Weston Keller',
       major: 'BS in Electrical Engineering and Music',
       role: 'Industry',
-      bio: 'He focuses on neuroscience, brain–computer interfaces, and interdisciplinary applications of electrical engineering. He is currently studying abroad in Japan and exploring cross-cultural perspectives in engineering and music.',
       href: 'https://www.linkedin.com/in/weston-keller/'
     },
     {
@@ -92,7 +83,6 @@ export default function Team() {
       name: 'Caroline Geiger',
       major: 'BS in Electrical Engineering',
       role: 'Industry',
-      bio: '',
       href: 'https://www.linkedin.com/in/carolineegeiger/'
     },
     {
@@ -101,7 +91,6 @@ export default function Team() {
       name: 'Sara Kothari',
       major: 'BS in Electrical Engineering; MS in Computer Science',
       role: 'Industry',
-      bio: '',
       href: 'https://www.linkedin.com/in/sara-kothari/'
     },
     {
@@ -110,7 +99,6 @@ export default function Team() {
       name: 'Milly Wong',
       major: 'BS in Electrical Engineering; MS in Computer Science',
       role: 'Marketing',
-      bio: 'She is interested in healthcare technologies, sensing systems, and hardware–software integration. She works on prototyping an ultrasound-based continuous blood pressure sensor and contributes to CubeSat and healthcare design teams on campus. Outside academics, she enjoys reading widely.',
       href: 'https://www.linkedin.com/in/millyyuwong/'
     },
     {
@@ -119,7 +107,6 @@ export default function Team() {
       name: 'Nubia Correa',
       major: 'BS in Electrical Engineering',
       role: 'Marketing',
-      bio: 'She specializes in hardware–software systems and machine learning, with research in deep-learning motion correction for cardiac PET imaging. She also supports outreach and advocacy efforts for IEEE and Women in Electrical Engineering. She is passionate about expanding access to opportunities in STEM.',
       href: 'https://www.linkedin.com/in/nubia-correa/'
     },
     {
@@ -128,8 +115,15 @@ export default function Team() {
       name: 'Joshiro Lawrence',
       major: 'BS in Computer Science',
       role: 'Webmaster',
-      bio: 'He is interested in machine learning, signal processing, educational technology, and pure mathematics. Outside the classroom, he enjoys hockey, reading, gaming, and long-distance running.',
       href: 'https://www.linkedin.com/in/joshiro-lawrence/'
+    },
+    {
+      id: 15,
+      img: `${baseUrl}img/officers/amy.jpg`,
+      name: 'Amy Ge',
+      major: 'BS in Computer Science',
+      role: 'URTC Lead',
+      href: 'https://www.linkedin.com/in/yujun-ge/'
     }
   ]
 
@@ -140,7 +134,6 @@ export default function Team() {
       name: 'Thomas Lee',
       major: 'Electrical Engineering',
       role: 'Faculty Counselor',
-      bio: 'He provides academic and professional guidance for the IEEE Stanford Student Branch. He supports student initiatives and helps foster connections between industry and the academic community.',
       href: 'https://profiles.stanford.edu/thomas-lee'
     },
     {
@@ -149,7 +142,6 @@ export default function Team() {
       name: 'Mark Horowitz',
       major: 'Electrical Engineering',
       role: 'Department Chair',
-      bio: '',
       href: 'https://profiles.stanford.edu/mark-horowitz'
     },
     {
@@ -158,7 +150,6 @@ export default function Team() {
       name: 'Dustin Schroeder',
       major: 'Electrical Engineering',
       role: 'Faculty Advisor',
-      bio: 'He teaches EE 100.',
       href: 'https://profiles.stanford.edu/dustin-schroeder'
     }
   ]

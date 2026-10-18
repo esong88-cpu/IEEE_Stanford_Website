@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { eventsNotOnLuma } from './eventsPageData'
+import { chaptersForText } from './chaptersPageData'
 
 // Cloudflare Worker that serves the Luma calendar as JSON (see worker/luma-events).
 // Dev and production both use the deployed Worker; `npm run dev:local-events`
@@ -33,8 +34,10 @@ function toCard(ev) {
     dateStr: `${weekdayFmt.format(start)}, ${month}/${day} @ ${timeFmt.format(start)}`,
     shortDateStr: `${month}/${day}/${String(year).slice(-2)}`,
     details: ev.description || ev.location?.split(',')[0] || '',
+    location: ev.location?.split(',')[0] || '',
     image: ev.image || undefined,
     href: ev.url,
+    chapters: chaptersForText(`${ev.title} ${ev.description || ''}`).map(({ id, short, accent }) => ({ id, short, accent })),
   }
 }
 

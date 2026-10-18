@@ -3,6 +3,7 @@ import ChapterPage from '../components/ChapterPage'
 export default function EDS() {
   return (
     <ChapterPage
+      chapterId="eds"
       kicker="EDS Student Chapter"
       title="Electron Devices Society"
       description="Technical talks and networking around semiconductor devices, solid-state electronics, and micro/nano fabrication."

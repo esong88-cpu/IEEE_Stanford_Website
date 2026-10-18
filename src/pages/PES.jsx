@@ -6,6 +6,7 @@ const INTEREST_FORM_URL = 'https://forms.gle/aBGHrmKrJKXLdMFUA'
 export default function PES() {
   return (
     <ChapterPage
+      chapterId="pes"
       kicker="PES Student Chapter"
       title="Power & Energy Society"
       description="Technical talks and networking around power systems, energy conversion, grid modernization, and power electronics."

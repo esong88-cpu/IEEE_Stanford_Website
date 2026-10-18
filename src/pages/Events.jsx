@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import UpcomingCard from '../components/UpcomingCard'
 import {
   pastHighlightData,
@@ -10,6 +11,7 @@ import PastHighlightCard from '../components/PastHighlightCard'
 import FeaturedHighlightCard from '../components/FeaturedHighlightCard'
 import { PageHeader } from '../components/Section'
 import { eventsArchiveData } from '../data/eventsArchiveData'
+import { aiComputeMeta } from '../data/aiComputeData'
 
 const RECENT_PREVIEW_COUNT = 8
 
@@ -31,7 +33,18 @@ export default function Events() {
           description="Talks, fireside chats, and recruiting sessions with industry leaders and researchers."
         />
 
-        <div className="page-block" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
+        <Link to={aiComputeMeta.path} className="conf-callout">
+          <span className="conf-callout-kicker">Symposium · {aiComputeMeta.dateStr}</span>
+          <span className="conf-callout-title">
+            {aiComputeMeta.title}: {aiComputeMeta.subtitle}
+          </span>
+          <span className="conf-callout-desc">
+            {aiComputeMeta.description} {aiComputeMeta.where}.
+          </span>
+          <span className="conf-callout-cta">Program, speakers &amp; registration →</span>
+        </Link>
+
+        <div className="page-block">
           <h2 className="page-block-title">Featured</h2>
           <div className="featured-grid featured-grid--3">
             {featuredEventsData.slice(0, 3).map((ev, i) => (

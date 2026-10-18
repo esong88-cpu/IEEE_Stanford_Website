@@ -4,7 +4,7 @@ import Hamburger from 'hamburger-react'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home' },
-  { to: '/events', label: 'Events', isActive: (p) => normalizePath(p) === '/events' || p.startsWith('/event/') },
+  { to: '/events', label: 'Events', isActive: (p) => ['/events', '/ai-compute'].includes(normalizePath(p)) || p.startsWith('/event/') },
   { to: '/team', label: 'Team' },
   { to: '/chapters', label: 'Chapters' },
   { to: '/resources', label: 'Resources' },

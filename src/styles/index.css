@@ -1966,20 +1966,40 @@ details[open] .year-body {
 .jr-rail button.is-active { color: var(--jr-ink); }
 .jr-rail button.is-active .jr-rail-tick { width: 30px; background: var(--jr-coral); }
 
-.jr-hud {
+.jr-scalebar {
   position: absolute;
   left: max(1.5rem, calc((100vw - var(--max-wide)) / 2 + 1.5rem));
   bottom: 1.5rem;
   display: flex;
-  align-items: baseline;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 0.45rem;
   font-family: var(--jr-mono);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 
-.jr-hud-label { font-size: 0.625rem; color: var(--jr-faint); }
-.jr-hud-value { font-size: 0.8125rem; color: var(--jr-ink); font-variant-numeric: tabular-nums; }
+.jr-scalebar-line {
+  height: 6px;
+  border: 1px solid rgba(238, 241, 247, 0.6);
+  border-top: 0;
+}
+
+.jr-scalebar-value {
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: rgba(238, 241, 247, 0.75);
+  font-variant-numeric: tabular-nums;
+}
+
+.jr-names {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  color: rgba(238, 241, 247, 0.88);
+}
 
 .jr-cue {
   position: absolute;
@@ -2019,7 +2039,8 @@ details[open] .year-body {
   .jr-rail-name { display: none; }
   .jr-rail-tick { width: 10px; }
   .jr-rail button.is-active .jr-rail-tick { width: 20px; }
-  .jr-hud { left: 1.25rem; bottom: 1.25rem; }
+  .jr-scalebar { left: 1.25rem; bottom: 1.25rem; }
+  .jr-names { font-size: 1rem; }
   .jr-cue { display: none; }
 }
 

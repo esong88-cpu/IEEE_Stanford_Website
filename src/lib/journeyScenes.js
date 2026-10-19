@@ -9,7 +9,6 @@
  *   v.l/r/t/b visible extents in units
  *   v.t0      time in seconds
  *   v.child   half-size of the square that holds the previous scene
- *   v.mouse   pointer position in units, or null
  *   v.dpr     device pixel ratio (for shadow sizes, which ignore the transform)
  *
  * Light comes from the top left throughout; shadows fall to the bottom right.
@@ -334,12 +333,12 @@ function drawTransistor(ctx, v) {
 /* ── 1 · Interconnect stack, seen from above ─────────────────────────────────── */
 
 // Metal layers from the bottom up: thin and dense near the transistors, wide and sparse on
-// top. `depth` drives parallax and how far each layer sinks into the dielectric.
+// top.
 const METAL = [
-  { dir: 'h', pitch: 0.028, width: 0.009, depth: 1.0, seg: 0.25, tone: [104, 70, 48], alpha: 0.5 },
-  { dir: 'v', pitch: 0.042, width: 0.013, depth: 0.7, seg: 0.4, tone: [128, 86, 58], alpha: 0.48 },
-  { dir: 'h', pitch: 0.084, width: 0.024, depth: 0.4, seg: 0.7, tone: [148, 100, 68], alpha: 0.44 },
-  { dir: 'v', pitch: 0.21, width: 0.042, depth: 0.1, seg: 1.4, tone: [160, 112, 76], alpha: 0.34 },
+  { dir: 'h', pitch: 0.028, width: 0.009, seg: 0.25, tone: [104, 70, 48], alpha: 0.5 },
+  { dir: 'v', pitch: 0.042, width: 0.013, seg: 0.4, tone: [128, 86, 58], alpha: 0.48 },
+  { dir: 'h', pitch: 0.084, width: 0.024, seg: 0.7, tone: [148, 100, 68], alpha: 0.44 },
+  { dir: 'v', pitch: 0.21, width: 0.042, seg: 1.4, tone: [160, 112, 76], alpha: 0.34 },
 ]
 
 // Signal nets that climb the stack: M1 → M2 → M3 → M4, as [x, y] turning points.
@@ -361,12 +360,12 @@ function pathLength(pts) {
   return total
 }
 
-function drawMetal(ctx, v, layer, ox, oy, keepOut) {
+function drawMetal(ctx, v, layer, keepOut) {
   const { px } = v
   const [r, g, b] = layer.tone
   const horizontal = layer.dir === 'h'
-  const [lo, hi] = horizontal ? [v.t - oy, v.b - oy] : [v.l - ox, v.r - ox]
-  const [alo, ahi] = horizontal ? [v.l - ox, v.r - ox] : [v.t - oy, v.b - oy]
+  const [lo, hi] = horizontal ? [v.t, v.b] : [v.l, v.r]
+  const [alo, ahi] = horizontal ? [v.l, v.r] : [v.t, v.b]
   const w = layer.width
   for (let k = Math.floor(lo / layer.pitch) - 1; k <= Math.ceil(hi / layer.pitch) + 1; k++) {
     const c = k * layer.pitch
@@ -378,17 +377,15 @@ function drawMetal(ctx, v, layer, ox, oy, keepOut) {
     while (a < ahi) {
       const len = layer.seg * (rail ? 3 : 0.3 + hash(k, s) * 1.1)
       const gap = rail ? 0 : layer.seg * (0.06 + hash(s, k) * 0.25)
-      let a2 = a + len
+      const a2 = a + len
       // Keep the transistor slot clear
-      const cross = horizontal ? Math.abs(c + oy) < keepOut + ww : Math.abs(c + ox) < keepOut + ww
       const segs = []
-      const center = horizontal ? -ox : -oy
-      if (cross && a < center + keepOut && a2 > center - keepOut) {
-        if (a < center - keepOut) segs.push([a, center - keepOut])
-        if (a2 > center + keepOut) segs.push([center + keepOut, a2])
+      if (Math.abs(c) < keepOut + ww && a < keepOut && a2 > -keepOut) {
+        if (a < -keepOut) segs.push([a, -keepOut])
+        if (a2 > keepOut) segs.push([keepOut, a2])
       } else segs.push([a, a2])
       for (const [p, q] of segs) {
-        const [x, y, sw, sh] = horizontal ? [p + ox, c - ww / 2 + oy, q - p, ww] : [c - ww / 2 + ox, p + oy, ww, q - p]
+        const [x, y, sw, sh] = horizontal ? [p, c - ww / 2, q - p, ww] : [c - ww / 2, p, ww, q - p]
         // Shadow onto the layer below, body, then a lit top edge
         ctx.fillStyle = 'rgba(0, 0, 0, 0.35)'
         ctx.fillRect(x + ww * 0.25, y + ww * 0.25, sw, sh)
@@ -400,7 +397,7 @@ function drawMetal(ctx, v, layer, ox, oy, keepOut) {
       }
       // Vias drop from this layer to the one beneath at segment ends
       if (layer !== METAL[0] && hash(k * 7, s) > 0.4) {
-        const [vx, vy] = horizontal ? [a + ox + ww * 0.6, c + oy] : [c + ox, a + oy + ww * 0.6]
+        const [vx, vy] = horizontal ? [a + ww * 0.6, c] : [c, a + ww * 0.6]
         if (Math.abs(vx) > keepOut + ww || Math.abs(vy) > keepOut + ww) {
           const vs = Math.min(ww * 0.6, 0.016)
           ctx.fillStyle = `rgba(${r + 80}, ${g + 70}, ${b + 60}, 0.5)`
@@ -414,12 +411,9 @@ function drawMetal(ctx, v, layer, ox, oy, keepOut) {
 }
 
 function drawLogic(ctx, v) {
-  const { px, t0, child: c, mouse } = v
+  const { px, t0, child: c } = v
   background(ctx, v, '#07090d')
 
-  // Parallax: deeper layers move less as the pointer or a slow drift moves the eye
-  const ex = (mouse ? mouse.x * 0.02 : 0) + Math.sin(t0 * 0.21) * 0.006
-  const ey = (mouse ? mouse.y * 0.02 : 0) + Math.cos(t0 * 0.17) * 0.006
   const keepOut = c + 0.012
 
   // Transistor rows at the very bottom, seen faintly through everything
@@ -438,7 +432,7 @@ function drawLogic(ctx, v) {
     // Dielectric haze pushes everything already drawn a step deeper
     ctx.fillStyle = 'rgba(7, 9, 13, 0.32)'
     ctx.fillRect(v.l - 1, v.t - 1, v.r - v.l + 2, v.b - v.t + 2)
-    drawMetal(ctx, v, layer, ex * (1 - layer.depth), ey * (1 - layer.depth), keepOut)
+    drawMetal(ctx, v, layer, keepOut)
   }
 
   // Live nets: a pulse climbs through the stack and leaves a fading trail
@@ -454,22 +448,19 @@ function drawLogic(ctx, v) {
       walked += len
       if (!len) continue
       const layer = METAL[Math.min(i - 1, METAL.length - 1)]
-      const d = 1 - layer.depth
-      const ox = ex * d
-      const oy = ey * d
       const lit0 = Math.max(0, Math.min(len, head - from - total * 0.35))
       const lit1 = Math.max(0, Math.min(len, head - from))
       if (lit1 <= lit0) continue
       const ux = (x2 - x1) / len
       const uy = (y2 - y1) / len
-      const g = ctx.createLinearGradient(x1 + ux * lit0 + ox, y1 + uy * lit0 + oy, x1 + ux * lit1 + ox, y1 + uy * lit1 + oy)
+      const g = ctx.createLinearGradient(x1 + ux * lit0, y1 + uy * lit0, x1 + ux * lit1, y1 + uy * lit1)
       g.addColorStop(0, rgba(CORAL, 0))
       g.addColorStop(1, rgba(CORAL, 0.85))
       ctx.strokeStyle = g
       ctx.lineWidth = Math.max(layer.width * 0.9, 2 * px)
       ctx.lineCap = 'butt'
-      line(ctx, x1 + ux * lit0 + ox, y1 + uy * lit0 + oy, x1 + ux * lit1 + ox, y1 + uy * lit1 + oy)
-      if (head - from < len && head > from) glow(ctx, x1 + ux * lit1 + ox, y1 + uy * lit1 + oy, 2.4 * px, CORAL, 0.9)
+      line(ctx, x1 + ux * lit0, y1 + uy * lit0, x1 + ux * lit1, y1 + uy * lit1)
+      if (head - from < len && head > from) glow(ctx, x1 + ux * lit1, y1 + uy * lit1, 2.4 * px, CORAL, 0.9)
     }
   }
 
@@ -1330,7 +1321,7 @@ function drawDevice(ctx, v, d, s, a) {
 }
 
 function drawWorld(ctx, v) {
-  const { px, t0, child: c, mouse } = v
+  const { px, t0, child: c } = v
   background(ctx, v, BG)
 
   // Faint globe grid behind everything
@@ -1349,11 +1340,10 @@ function drawWorld(ctx, v) {
 
   // Links from the server out to every device, carrying data both ways
   for (const [i, d] of DEVICES.entries()) {
-    const near = mouse ? Math.max(0, 1 - Math.hypot(d.x - mouse.x, d.y - mouse.y) / 0.5) : 0
     const mx = d.x * 0.5 + (hash(i, 1) - 0.5) * 0.3
     const my = d.y * 0.5 + (hash(i, 2) - 0.5) * 0.3
-    ctx.strokeStyle = rgba(CORAL, 0.18 + 0.3 * near)
-    ctx.lineWidth = px * (1 + near)
+    ctx.strokeStyle = rgba(CORAL, 0.18)
+    ctx.lineWidth = px
     ctx.beginPath()
     ctx.moveTo(0, 0)
     ctx.quadraticCurveTo(mx, my, d.x, d.y)
@@ -1366,7 +1356,7 @@ function drawWorld(ctx, v) {
       glow(ctx, x, y, 2 * px, CORAL, 0.8 * Math.sin(f * Math.PI))
     }
     const bob = Math.sin(t0 * 0.8 + i) * 0.012
-    drawDevice(ctx, v, { ...d, y: d.y + bob }, 1 + near * 0.1, 0.82 + 0.18 * near)
+    drawDevice(ctx, v, { ...d, y: d.y + bob }, 1, 0.82)
   }
 
   // The server we came from, glowing at the center

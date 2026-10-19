@@ -51,7 +51,8 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
         </Routes>
       </main>
-      <Footer />
+      {/* The home page ends on its last scene; the nav covers everything the footer would */}
+      {location.pathname !== '/' && <Footer />}
     </div>
   )
 }

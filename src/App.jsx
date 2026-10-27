@@ -17,8 +17,12 @@ import Event from './pages/Event'
 import AICompute from './pages/AICompute'
 import NewHere from './pages/NewHere'
 
+// Conference pages stand alone: no site banner, nav or footer
+const STANDALONE_PATHS = ['/ai-compute']
+
 export default function App() {
   const location = useLocation()
+  const standalone = STANDALONE_PATHS.includes(location.pathname.replace(/\/+$/, ''))
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -32,8 +36,8 @@ export default function App() {
 
   return (
     <div className="page">
-      <Banner />
-      <Nav />
+      {!standalone && <Banner />}
+      {!standalone && <Nav />}
       <main key={location.pathname} className="main-enter">
         <Routes location={location}>
           <Route path="/" element={<Home />} />
@@ -52,7 +56,7 @@ export default function App() {
         </Routes>
       </main>
       {/* The home page ends on its last scene; the nav covers everything the footer would */}
-      {location.pathname !== '/' && <Footer />}
+      {location.pathname !== '/' && !standalone && <Footer />}
     </div>
   )
 }

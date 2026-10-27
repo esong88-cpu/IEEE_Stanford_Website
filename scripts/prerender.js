@@ -36,7 +36,7 @@ const SITE = 'https://web.stanford.edu/group/ieee'
 const PAGE_META = {
   '/ai-compute': {
     title: 'AI Compute Orchestration S2S · Nov 13 at Stanford',
-    description: 'A half-day symposium on how AI hardware is built, from silicon to systems. Talks and a panel with Samsung, Stanford, Micron, Amazon and Anthropic. Free, with breakfast and lunch.',
+    description: 'A day of talks on how AI hardware is built, from silicon to systems. Keynote by Norm Jouppi (Google), with talks and a panel from Samsung, Stanford, Micron and AWS. Free, with breakfast and lunch.',
     image: 'og/ai-compute.jpg',
   },
   '/events': { title: 'Events · Stanford IEEE', description: 'Upcoming talks, firesides and professor lunches, plus past highlights.' },

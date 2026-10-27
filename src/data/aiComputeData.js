@@ -61,7 +61,7 @@ const SPEAKERS = {
     name: 'Norm Jouppi',
     org: 'Google',
     logo: logo('google.svg'),
-    photo: img('jouppi.jpg'),
+    photo: img('jouppi-2.jpg'),
     bio: 'Google Fellow who has helped lead Google’s Tensor Processing Units since the first generation. Member of the National Academy of Engineering. PhD, Stanford.',
   },
   park: {
@@ -93,7 +93,7 @@ const SPEAKERS = {
     name: 'Jawad Nasrullah',
     org: 'Palo Alto Electron',
     logo: logo('pae.png'),
-    photo: img('nasrullah.jpg'),
+    photo: img('nasrullah-2.jpg'),
     bio: 'CEO of Palo Alto Electron. Co-leads the Open Compute Project’s Open Chiplet Economy effort; co-founded zGlue. PhD, Stanford.',
   },
 }

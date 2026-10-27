@@ -45,6 +45,19 @@ export default function Events() {
           <span className="conf-callout-cta">Program, speakers &amp; registration →</span>
         </Link>
 
+        {/* Static site in public/urtc, so a full page load rather than a router link */}
+        <a href={`${import.meta.env.BASE_URL}urtc/index.html`} className="conf-callout conf-callout--urtc">
+          <span className="conf-callout-kicker">Conference · Spring 2027</span>
+          <span className="conf-callout-title">
+            Stanford URTC <em>2027</em>
+            <span className="conf-callout-sub">Undergraduate Research Technology Conference</span>
+          </span>
+          <span className="conf-callout-desc">
+            A one-day, student-run conference for undergraduate and high school researchers. Posters, paper talks and lightning talks.
+          </span>
+          <span className="conf-callout-cta">About URTC &amp; interest list →</span>
+        </a>
+
         <div className="page-block">
           <h2 className="page-block-title">Featured</h2>
           <div className="featured-grid featured-grid--3">

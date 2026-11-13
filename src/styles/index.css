@@ -1498,6 +1498,10 @@ details[open] .year-body {
 .s2s-cta:hover { background: #A51C1C; }
 .s2s-cta:active { transform: scale(0.98); }
 .s2s-cta--lg { padding: 15px 26px; font-size: 16px; }
+/* Registration closed: same pill shape, muted outline, not clickable */
+.s2s-cta.s2s-cta--closed { background: transparent; border-color: rgba(237, 232, 225, 0.28); color: var(--s2s-muted) !important; cursor: default; }
+.s2s-cta.s2s-cta--closed:hover { background: transparent; }
+.s2s-cta.s2s-cta--closed:active { transform: none; }
 
 /* Top bar */
 .s2s-bar {
@@ -1514,7 +1518,7 @@ details[open] .year-body {
 .s2s-lockup-ieee { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 500; white-space: nowrap; }
 .s2s-lockup-ieee img { width: 34px; height: 34px; display: block; }
 .s2s-x { font-family: var(--s2s-mono); font-size: 13px; color: #6F6962; }
-.s2s-lockup-cass { height: 30px; width: auto; display: block; }
+.s2s-lockup-cass { height: 34px; width: auto; display: block; }
 .s2s-lockup-samsung { display: flex; align-items: baseline; gap: 7px; }
 .s2s-lockup-samsung img { height: 13px; width: auto; display: block; }
 
@@ -1535,8 +1539,6 @@ details[open] .year-body {
 .s2s-title { margin: 0; font-family: var(--s2s-serif); font-weight: 400; font-size: clamp(44px, 6vw, 80px); line-height: 0.98; letter-spacing: -0.018em; text-wrap: balance; }
 .s2s-title em { color: var(--s2s-coral); }
 .s2s-subtitle { display: block; margin-top: 0.3em; font-style: italic; font-size: max(0.42em, 21px); line-height: 1.1; letter-spacing: 0; color: #C9C2B8; }
-.s2s-keynote { margin: 0; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; font-family: var(--s2s-serif); font-size: 24px; line-height: 1.2; }
-.s2s-keynote .s2s-mono-label { color: #C9B6F2; }
 .s2s-when { margin: 0; display: flex; flex-wrap: wrap; font-family: var(--s2s-mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--s2s-ink); }
 
 /* Exploded package art */
@@ -1679,16 +1681,13 @@ details[open] .year-body {
 /* Footer: last call, logistics, hosts */
 .s2s-foot { position: relative; overflow: hidden; background: #0F0E0D; }
 .s2s-foot-inner { position: relative; display: flex; flex-direction: column; gap: 44px; padding-top: clamp(56px, 8vw, 96px); padding-bottom: 48px; }
-.s2s-foot-facts { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 18px 28px; padding: 22px 0; border-bottom: 1px solid var(--s2s-line); }
-.s2s-foot-facts div { display: flex; flex-direction: column; gap: 6px; }
-.s2s-foot-facts dt { font-family: var(--s2s-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--s2s-faint); }
-.s2s-foot-facts dd { margin: 0; font-size: 15px; overflow-wrap: anywhere; }
 .s2s-foot-hosts { display: flex; flex-wrap: wrap; gap: 28px 64px; }
 .s2s-foot-hosts > div { display: flex; flex-direction: column; gap: 12px; }
 .s2s-host { display: flex; align-items: center; gap: 12px; font-family: var(--s2s-serif); font-size: 22px; line-height: 1.05; }
 .s2s-host small { display: block; margin-top: 3px; font-family: var(--font); font-size: 12px; color: var(--s2s-muted); }
 .s2s-host-ieee { width: 44px; height: 44px; display: block; }
 .s2s-host-cass { height: 44px; width: auto; display: block; }
+.s2s-host.s2s-host-mail { min-height: 44px; font-family: var(--font); font-size: 15px; overflow-wrap: anywhere; }
 
 /* Tablet and phone: art drops under the copy and scales to the screen */
 @media (max-width: 900px) {
@@ -1701,9 +1700,8 @@ details[open] .year-body {
 @media (max-width: 640px) {
   .s2s { --s2s-bar: 56px; }
   .s2s-lockup { gap: 9px; }
-  .s2s-lockup-ieee span { display: none; }
   .s2s-lockup-ieee img { width: 30px; height: 30px; }
-  .s2s-lockup-cass { height: 26px; }
+  .s2s-lockup-cass { height: 30px; }
   .s2s-hero-inner { padding-top: 28px; }
   .s2s-hero-copy { gap: 22px; }
   .s2s-when { font-size: 12px; }
@@ -1724,10 +1722,9 @@ details[open] .year-body {
   .s2s-committee-list li { padding: 12px 0; }
   .s2s-committee-name { font-size: 18px; }
   .s2s-committee-role { font-size: 12px; }
-  .s2s-foot-facts { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .s2s-foot-facts div:last-child { grid-column: 1 / -1; }
   .s2s-bio p { font-size: 14px; }
   .s2s-cta--lg { padding: 14px 22px; font-size: 15px; }
+  .s2s-bar .s2s-cta { padding: 8px 12px; font-size: 13px; }
 }
 @media (max-width: 360px) {
   .s2s-x { display: none; }

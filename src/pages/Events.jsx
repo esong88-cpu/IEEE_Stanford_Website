@@ -36,13 +36,15 @@ export default function Events() {
         <Link to={aiComputeMeta.path} className="conf-callout">
           <span className="conf-callout-kicker">Symposium · {aiComputeMeta.dateStr}</span>
           <span className="conf-callout-title">
-            AI Compute Orchestration <em>S2S</em>
+            AI Compute Orchestration
             <span className="conf-callout-sub">{aiComputeMeta.subtitle}</span>
           </span>
           <span className="conf-callout-desc">
             {aiComputeMeta.description} {aiComputeMeta.where}.
           </span>
-          <span className="conf-callout-cta">Program, speakers &amp; registration →</span>
+          <span className="conf-callout-cta">
+            {aiComputeMeta.registrationOpen ? 'Program, speakers & registration →' : 'Program & speakers →'}
+          </span>
         </Link>
 
         {/* Static site in public/urtc, so a full page load rather than a router link */}

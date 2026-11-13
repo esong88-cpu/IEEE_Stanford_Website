@@ -9,7 +9,7 @@ const logo = (file) => img(`logos/${file}`)
 
 export const aiComputeMeta = {
   path: '/ai-compute',
-  title: 'AI Compute Orchestration S2S',
+  title: 'AI Compute Orchestration',
   subtitle: 'From Silicon to Systems',
   description: 'A day of talks on how AI hardware is built, from silicon to systems, then a panel. Free, with breakfast and lunch.',
   dateStr: 'Fri, Nov 13, 2026',
@@ -19,13 +19,14 @@ export const aiComputeMeta = {
   seatsShort: 'About 70 seats',
   lumaUrl: 'https://luma.com/kv8u97ga',
   contact: 'ieee@ee.stanford.edu',
-  parking: 'Via Ortega Garage',
   deadlineStr: 'Nov 6',
+  // Registration closed after the Nov 6 deadline. Set to true to bring the Register buttons back.
+  registrationOpen: false,
 }
 
 export const aiComputeLogos = {
   stanfordIeee: img('stanford-ieee.png'),
-  cass: img('ieee-cass.png'),
+  cass: img('cas-mark.png'),
   samsung: img('samsung.svg'),
 }
 
@@ -96,6 +97,13 @@ const SPEAKERS = {
     photo: img('nasrullah-2.jpg'),
     bio: 'CEO of Palo Alto Electron. Co-leads the Open Compute Project’s Open Chiplet Economy effort; co-founded zGlue. PhD, Stanford.',
   },
+  hur: {
+    name: 'Joonhoi Hur',
+    org: 'Samsung Semiconductor',
+    logo: logo('samsung.svg'),
+    photo: img('hur.jpg'),
+    bio: 'Corporate Vice President at Samsung Electronics. Previously an RF systems architect at Apple and a senior staff engineer at Qualcomm working on 5G NR RF front ends. PhD, Georgia Tech.',
+  },
 }
 
 // kind: 'talk' (default) | 'quiet' (welcome, breaks, meals) | 'tba' (title to come)
@@ -107,7 +115,7 @@ export const aiComputeProgram = [
   { time: '9:45', title: 'From KV Cache Offloading to Agent Workflow: How AI Memory Movement Works in System Software', speakers: [SPEAKERS.seo] },
   { time: '10:15', title: 'Domain Specific Accelerator Architectures for Servicing LLMs', speakers: [SPEAKERS.gunnam] },
   { time: '10:45', title: 'Break', kind: 'quiet' },
-  { time: '11:15', title: 'Keynote', note: 'Title to come.', tag: 'Keynote', speakers: [SPEAKERS.jouppi] },
+  { time: '11:15', title: 'Architectures for the AI Era', tag: 'Keynote', speakers: [SPEAKERS.jouppi] },
   { time: '12:00', title: 'From Silicon to Intelligence: Hardware, Algorithms and AI Co-Evolving at Scale', speakers: [SPEAKERS.park] },
   { time: '12:30', title: 'Lunch', kind: 'quiet' },
   { time: '1:30', title: 'Multi-physical Challenges and Trends of 2.5D/3D Advanced Packaging for High-Current AI Processor Stacks', speakers: [SPEAKERS.kim] },
@@ -115,15 +123,12 @@ export const aiComputeProgram = [
     time: '2:00',
     title: 'Orchestrating the stack',
     tag: 'Panel',
-    who: 'Tom Lee and other panelists · moderated by Jawad Nasrullah',
-    note: 'With audience Q&A.',
-    speakers: [SPEAKERS.lee, SPEAKERS.nasrullah],
-    panel: [SPEAKERS.lee, SPEAKERS.nasrullah],
-    logos: [
-      { src: logo('stanford.svg'), org: 'Stanford' },
-      { src: logo('pae.png'), org: 'Palo Alto Electron' },
-      { src: logo('samsung.svg'), org: 'Samsung Semiconductor' },
-    ],
+    who: 'Tom Lee, Joonhoi Hur, Dongjoo Seo, Vincent Kim, Youngsuk Park and Kiran Gunnam · moderated by Jawad Nasrullah',
+    note: 'With audience Q&A. Dongjoo Seo, Vincent Kim, Youngsuk Park and Kiran Gunnam also gave talks today; their bios are with their talks above.',
+    // Bios shown when expanded: panelists who don't give a talk, plus the moderator.
+    speakers: [SPEAKERS.lee, SPEAKERS.hur, SPEAKERS.nasrullah],
+    // Face row: every panelist, moderator last.
+    panel: [SPEAKERS.lee, SPEAKERS.hur, SPEAKERS.seo, SPEAKERS.kim, SPEAKERS.park, SPEAKERS.gunnam, SPEAKERS.nasrullah],
   },
   { time: '3:00', title: 'Closing Remarks', who: 'Nathan Chang and Elkim Roa Fuentes, Samsung Semiconductor', kind: 'quiet' },
 ]
@@ -134,21 +139,21 @@ export const aiComputeCommittee = [
   { name: 'Nathan (Naehyuck) Chang', role: 'SVP, Samsung DSRA · IEEE Fellow, ACM Fellow' },
   { name: 'Elkim Roa Fuentes', role: 'SoC Architect, Samsung Semiconductor · IEEE CASS' },
   { name: 'Jawad Nasrullah', role: 'CEO, Palo Alto Electron' },
-  { name: 'Rajiv Joshi', role: 'Research Staff Member, IBM T. J. Watson Research Center' },
+  { name: 'Rajiv Joshi', role: 'Research Staff Member, IBM T. J. Watson Research Center · IEEE CASS' },
 ]
 
 // Practical details, shown as dropdowns at the foot of the page.
 export const aiComputeInfo = [
   {
-    title: 'Registration deadline',
+    title: 'Registration closed',
     body: [
-      `Register on Luma by ${aiComputeMeta.deadlineStr}. Seats are limited, so we review every registration and will email you by ${aiComputeMeta.deadlineStr} to confirm whether you have a seat.`,
+      `Registration closed on ${aiComputeMeta.deadlineStr}. If you registered, check your email for your seat confirmation.`,
     ],
   },
   {
     title: 'Coffee and breakfast',
     body: [
-      'Check in at the door and you get a $15 voucher for Bytes Café, inside the Packard building next door to Allen. Spend it on coffee or breakfast whenever you like.',
+      'Check in at the door and you get a $10 voucher for Bytes Café, inside the Packard building next door to Allen. Spend it on coffee or breakfast by 9:30 AM.',
       'Lunch is catered on site.',
     ],
   },

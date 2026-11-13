@@ -35,7 +35,7 @@ const template = fs.readFileSync(path.resolve(__dirname, '../dist/index.html'), 
 const SITE = 'https://web.stanford.edu/group/ieee'
 const PAGE_META = {
   '/ai-compute': {
-    title: 'AI Compute Orchestration S2S · Nov 13 at Stanford',
+    title: 'AI Compute Orchestration · Nov 13 at Stanford',
     description: 'A day of talks on how AI hardware is built, from silicon to systems. Keynote by Norm Jouppi (Google), with talks and a panel from Samsung, Stanford, Micron and AWS. Free, with breakfast and lunch.',
     image: 'og/ai-compute.jpg',
   },

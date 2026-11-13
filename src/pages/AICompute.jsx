@@ -9,7 +9,9 @@ import {
 
 // Stands alone (App hides the site nav here). Styles are the "AI Compute (S2S)" block in index.css.
 
-const keynote = aiComputeProgram.find((p) => p.tag === 'Keynote')?.speakers?.[0]
+// After the day ends the page stays up as a record: the registration pill and the
+// "Before you come" logistics drop away on their own.
+const EVENT_ENDS = new Date('2026-11-13T15:15:00-08:00')
 
 function rowClass({ tag, kind, speakers }) {
   return [
@@ -100,7 +102,6 @@ function Lockup({ className = '' }) {
     <span className={`s2s-lockup ${className}`} aria-label="Stanford IEEE × IEEE CASS × Samsung Semiconductor">
       <span className="s2s-lockup-ieee">
         <img src={logos.stanfordIeee} alt="" />
-        <span>Stanford IEEE</span>
       </span>
       <span className="s2s-x" aria-hidden="true">×</span>
       <img src={logos.cass} alt="" className="s2s-lockup-cass" />
@@ -113,12 +114,17 @@ function Lockup({ className = '' }) {
 }
 
 export default function AICompute() {
+  const isOver = Date.now() > EVENT_ENDS.getTime()
   return (
     <div className="s2s">
       <header className="s2s-bar">
         <div className="s2s-wrap s2s-bar-inner">
           <Lockup />
-          <a className="s2s-cta" href={meta.lumaUrl} target="_blank" rel="noreferrer">Register by {meta.deadlineStr}</a>
+          {meta.registrationOpen ? (
+            <a className="s2s-cta" href={meta.lumaUrl} target="_blank" rel="noreferrer">Register by {meta.deadlineStr}</a>
+          ) : !isOver && (
+            <span className="s2s-cta s2s-cta--closed">Registration closed</span>
+          )}
         </div>
       </header>
 
@@ -127,16 +133,11 @@ export default function AICompute() {
         <div className="s2s-wrap s2s-hero-inner">
           <div className="s2s-hero-copy">
             <h1 id="s2s-title" className="s2s-title s2s-reveal" style={{ animationDelay: '.08s' }}>
-              AI Compute Orchestration <em>S2S</em>
-              <span className="s2s-subtitle">{meta.subtitle}</span>
+              AI Compute Orchestration
+              <span className="s2s-subtitle">From <em>Silicon</em> to <em>Systems</em></span>
             </h1>
-            {keynote && (
-              <p className="s2s-keynote s2s-reveal" style={{ animationDelay: '.12s' }}>
-                <span className="s2s-mono-label">Keynote</span> {keynote.name}, {keynote.org}
-              </p>
-            )}
             <p className="s2s-when s2s-reveal" style={{ animationDelay: '.16s' }}>
-              {meta.dateStr}
+              {meta.dateStr} · {meta.where}
             </p>
           </div>
           <PackageArt />
@@ -175,7 +176,7 @@ export default function AICompute() {
       <footer className="s2s-foot" aria-labelledby="s2s-info-h">
         <div className="s2s-grain" aria-hidden="true" />
         <div className="s2s-wrap s2s-foot-inner">
-          <div>
+          {!isOver && <div>
             <div className="s2s-section-head">
               <h2 id="s2s-info-h" className="s2s-h2">Before you <em>come</em></h2>
             </div>
@@ -194,12 +195,7 @@ export default function AICompute() {
                 </li>
               ))}
             </ul>
-          </div>
-          <dl className="s2s-foot-facts">
-            <div><dt>Where</dt><dd>{meta.where}</dd></div>
-            <div><dt>Parking</dt><dd>{meta.parking}</dd></div>
-            <div><dt>Contact</dt><dd><a href={`mailto:${meta.contact}`}>{meta.contact}</a></dd></div>
-          </dl>
+          </div>}
           <div className="s2s-foot-hosts">
             <div>
               <span className="s2s-mono-label">Hosted by</span>
@@ -214,6 +210,10 @@ export default function AICompute() {
                 <img src={logos.cass} alt="" className="s2s-host-cass" />
                 <span>IEEE CASS<small>Circuits and Systems Society</small></span>
               </span>
+            </div>
+            <div>
+              <span className="s2s-mono-label">Contact</span>
+              <a className="s2s-host s2s-host-mail" href={`mailto:${meta.contact}`}>{meta.contact}</a>
             </div>
           </div>
         </div>

@@ -423,13 +423,17 @@ export default function Home() {
           <section ref={setPanel(3)} className="jr-panel" aria-label="AI Compute symposium">
             <p className="jr-eyebrow jr-eyebrow--violet">Nov 13 · Allen 101X</p>
             <h2 className="jr-serif">
-              AI Compute Orchestration <em>S2S</em>
+              AI Compute Orchestration
             </h2>
             <div className="jr-actions">
-              <a href={aiComputeMeta.lumaUrl} target="_blank" rel="noreferrer" className="jr-btn jr-btn--primary">
-                Register
-              </a>
-              <Link to={aiComputeMeta.path} className="jr-btn">Program</Link>
+              {aiComputeMeta.registrationOpen && (
+                <a href={aiComputeMeta.lumaUrl} target="_blank" rel="noreferrer" className="jr-btn jr-btn--primary">
+                  Register
+                </a>
+              )}
+              <Link to={aiComputeMeta.path} className={aiComputeMeta.registrationOpen ? 'jr-btn' : 'jr-btn jr-btn--primary'}>
+                Program
+              </Link>
             </div>
           </section>
 

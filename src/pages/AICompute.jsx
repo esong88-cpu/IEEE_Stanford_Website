@@ -136,9 +136,6 @@ export default function AICompute() {
               AI Compute Orchestration
               <span className="s2s-subtitle">From <em>Silicon</em> to <em>Systems</em></span>
             </h1>
-            <p className="s2s-when s2s-reveal" style={{ animationDelay: '.16s' }}>
-              {meta.dateStr} · {meta.where}
-            </p>
           </div>
           <PackageArt />
         </div>
@@ -148,6 +145,7 @@ export default function AICompute() {
         <div className="s2s-wrap">
           <div className="s2s-section-head">
             <h2 id="s2s-program-h" className="s2s-h2">Program</h2>
+            <p className="s2s-when">{meta.dateStr} · {meta.where}</p>
           </div>
           <ol className="s2s-rows">
             {aiComputeProgram.map((p) => (

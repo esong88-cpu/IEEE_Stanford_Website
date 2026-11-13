@@ -1539,7 +1539,7 @@ details[open] .year-body {
 .s2s-title { margin: 0; font-family: var(--s2s-serif); font-weight: 400; font-size: clamp(44px, 6vw, 80px); line-height: 0.98; letter-spacing: -0.018em; text-wrap: balance; }
 .s2s-title em { color: var(--s2s-coral); }
 .s2s-subtitle { display: block; margin-top: 0.3em; font-style: italic; font-size: max(0.42em, 21px); line-height: 1.1; letter-spacing: 0; color: #C9C2B8; }
-.s2s-when { margin: 0; display: flex; flex-wrap: wrap; font-family: var(--s2s-mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--s2s-ink); }
+.s2s-when { margin: 0; font-family: var(--s2s-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--s2s-muted); }
 
 /* Exploded package art */
 .s2s-scene-wrap { min-width: 0; position: relative; height: 600px; }
@@ -1704,7 +1704,7 @@ details[open] .year-body {
   .s2s-lockup-cass { height: 30px; }
   .s2s-hero-inner { padding-top: 28px; }
   .s2s-hero-copy { gap: 22px; }
-  .s2s-when { font-size: 12px; }
+  .s2s-when { font-size: 11px; }
   .s2s-scene-wrap { height: 300px; }
   .s2s-scene { transform: scale(0.5); }
   .s2s-row-head { grid-template-columns: 50px minmax(0, 1fr) auto; gap: 4px 12px; padding: 16px 0; }
